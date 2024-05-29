@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "m_list.h"
 
-#define basic_test 0
+#define basic_test 1
 #define test_movenexttofront 0
 
 int main(void) {
