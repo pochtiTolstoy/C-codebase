@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+static const int MAX_SIZE = 100000;
+
 typedef struct Node {
   int key_;
   struct Node* next_;
@@ -19,45 +21,96 @@ typedef struct List {
   int size_;
 } List;
 
+
 // General methods
 void init_list(List*);
+
 void push(List*, int);
+
 int pop(List*);
+
 
 // for immitating queue
 void enqueue(List*, int);
 int dequeue(List*);
 
+
 // deallocating elements in list without head and tail.
 void clear_list(List*);
 
-// all elements are deallocated including head and tail.
-// list pointer itself is not NULL.
+/* free_list
+ *
+ * all elements are deallocated including head and tail.
+ * list pointer itself is not NULL.
+ */
 void free_list(List*);
+
+/* movenexttofront
+ *
+ * Moves next node after given to the front of the list.
+ * Abort if given node is not in list
+ * No changes if given node is last node in list including tail
+ * Sets rear_ pointer correctly
+ */ 
+void movenexttofront(List*, const Node*);
+
 
 // User methods
 void print_list(const List*);
+
+
 bool is_list_ready(const List*);
+
 bool is_list_empty(const List*);
+
 bool is_list_full(const List*);
+
+/* find_node
+ * Finds node in list and return non-constant pointer to this node.
+ * NULL if given node is not in the list
+ */
+Node* find_node(const List*, const Node*);
+
+/* find_node_ht
+ * Finds node in list and return non-constant pointer to this node,
+ * including head and tail.
+ * NULL if given node is not in the list
+ */
+Node* find_node_ht(const List*, const Node*);
+
+/* find_key
+ * Finds first node with given key in list 
+ * and return non-constant pointer to this node.
+ * NULL if given node is not in the list
+ */
+Node* find_key(const List*, int);
+
+/* find_key_ht
+ * Finds first node with given key in list 
+ * and return non-constant pointer to this node,
+ * including head and tail.
+ * NULL if given node is not in the list
+ */
+Node* find_key_ht(const List*, int);
+
 int get_list_capacity(void);
+
 int get_list_size(const List*);
+
 
 // Help static methods
 static void check_node_alloc(const Node*);
 static void check_node_number(const List*);
 static void check_rear_correctness(const List*);
-static void check_rear_pointer(const List*);
+static void check_rear_pointer(const List*); 
 static void inc_size(List*);
 static void dec_size(List*);
 static void check_clear_method(const List*);
 static void check_pop(const List*);
 
 
-// realization
+// realization:
 // ====================================================================
-
-static const int MAX_SIZE = 100000;
 
 // General methods
 void init_list(List* list) {
@@ -97,7 +150,7 @@ void push(List* list, int key) {
 	// set pointers
 	temp->next_ = list->head_->next_;
 	list->head_->next_ = temp;
-	list->rear_ = (get_list_size(list) == 0) ? temp : NULL;
+	list->rear_ = (get_list_size(list) == 0) ? temp : list->rear_;
 
 	// change list data
 	inc_size(list);
@@ -184,8 +237,26 @@ void free_list(List* list) {
 	list->tail_ = NULL;
 }
 
-// User methods
 
+void movenexttofront(List* list, const Node* prev_node) {
+	if (prev_node == list->head_ 
+			|| prev_node == list->tail_
+			|| prev_node == list->rear_)
+		return;
+	Node* lpr; // list_prev_node
+	if ((lpr = find_node(list, prev_node)) == NULL) return;
+	// 1. List contains at least two nodes
+	// 2. Given node in list and next node is valid
+	
+	list->rear_ = (lpr->next_ == list->rear_) ? lpr : list->rear_;
+	// Exist
+	Node* temp = lpr->next_->next_;
+	lpr->next_->next_ = list->head_->next_;
+	list->head_->next_ = lpr->next_;
+	lpr->next_ = temp;
+}
+
+// User methods
 void print_list(const List* list) {
 	if (!is_list_ready(list) || is_list_empty(list)) return;	
 	Node* temp = list->head_->next_;
@@ -202,6 +273,56 @@ bool is_list_empty(const List* list) {
 
 bool is_list_full(const List* list) {
 	return list->size_ == MAX_SIZE;
+}
+
+Node* find_node(const List* list, const Node* node) {
+	Node* ptr = list->head_->next_;
+
+	// only tail has this property
+	while (ptr != ptr->next_) {
+		if (ptr == node) return ptr;
+		ptr = ptr->next_;
+	}
+
+	return NULL;
+}
+
+Node* find_node_ht(const List* list, const Node* node) {
+	Node* ptr = list->head_;
+
+	// only tail has this property
+	while (ptr != ptr->next_) {
+		if (ptr == node) return ptr;
+		ptr = ptr->next_;
+	}
+
+	// check tail
+	return (ptr == node) ? ptr : NULL;
+}
+
+Node* find_key(const List* list, int key) {
+	Node* ptr = list->head_->next_;
+
+	// only tail has this property
+	while (ptr != ptr->next_) {
+		if (ptr->key_ == key) return ptr;
+		ptr = ptr->next_;
+	}
+
+	return NULL;
+}
+
+Node* find_key_ht(const List* list, int key) {
+	Node* ptr = list->head_;
+
+	// only tail has this property
+	while (ptr != ptr->next_) {
+		if (ptr->key_ == key) return ptr;
+		ptr = ptr->next_;
+	}
+
+	// check tail
+	return (ptr->key_ == key) ? ptr : NULL;
 }
 
 int get_list_size(const List* list) {
