@@ -3,7 +3,10 @@ CFLAGS = -g -Wall
 SRC = src
 OBJ = obj
 SRCS = $(wildcard $(SRC)/*.c) 
-OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+#BIN_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+#LIB_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+BIN_OBJS = $(OBJ)/tim_list.o $(OBJ)/main.o
+LIB_OBJS = $(OBJ)/tim_list.o
 
 HPP = include
 
@@ -24,12 +27,12 @@ release: CFLAGS = -Wall -O2 -DNDEBUG
 release: clean
 release: $(LIB)
 
-$(LIB): $(LIBDIR) $(OBJ) $(OBJS)
+$(LIB): $(LIBDIR) $(OBJ) $(LIB_OBJS)
 	$(RM) $(LIB)
-	ar -cvrs $(LIB) $(OBJS)
+	ar -cvrs $(LIB) $(LIB_OBJS)
 
-$(BIN): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@
+$(BIN): $(BIN_OBJS)
+	$(CC) $(CFLAGS) $(BIN_OBJS) -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c $(HPP)/%.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -38,7 +41,7 @@ $(OBJ)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TEST)/bin/%: $(TEST)/%.c
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ -lcriterion
+	$(CC) $(CFLAGS) $< $(LIB_OBJS) -o $@ -lcriterion
 
 $(OBJ):
 	mkdir $@
@@ -56,4 +59,4 @@ test: $(LIB) $(TEST)/bin $(TESTBINS)
 	for test in $(TESTBINS) ; do ./$$test ; done
 
 clean:
-	$(RM) -r $(LIBDIR)/* $(BINDIR)/* $(OBJ)/*
+	$(RM) -r $(TEST)/bin/* $(LIBDIR)/* $(BINDIR)/* $(OBJ)/*
