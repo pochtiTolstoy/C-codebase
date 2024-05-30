@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+static const int MAX_SIZE_LIST = 100000;
+
 typedef struct Node {
   int key_;
   struct Node* next_;

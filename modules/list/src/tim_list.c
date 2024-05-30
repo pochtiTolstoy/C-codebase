@@ -1,7 +1,5 @@
 #include "../include/tim_list.h"
 
-static const int MAX_SIZE = 100000;
-
 // Help static methods
 static void check_pop(const List* list) {
 	if (!is_list_ready(list)) {
@@ -229,7 +227,7 @@ bool is_list_empty(const List* list) {
 }
 
 bool is_list_full(const List* list) {
-	return list->size_ == MAX_SIZE;
+	return list->size_ == MAX_SIZE_LIST;
 }
 
 Node* find_node(const List* list, const Node* node) {
@@ -287,7 +285,7 @@ int get_list_size(const List* list) {
 }
 
 int get_list_capacity(void) {
-	return MAX_SIZE;
+	return MAX_SIZE_LIST;
 }
 
 bool is_list_ready(const List* list) {
