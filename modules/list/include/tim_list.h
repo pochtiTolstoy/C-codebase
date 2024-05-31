@@ -55,13 +55,29 @@ void clear_list(List*);
 void free_list(List*);
 
 /* movenexttofront
+ * Safe, linear time
  *
  * Moves next node after given to the front of the list.
- * Abort if given node is not in list
- * No changes if given node is last node in list including tail
+ * Returns NULL if given node is not in list.
+ * No changes if given node is last node in list including tail.
+ * If given node is head return NULL
+ *
  * Sets rear_ pointer correctly
+ * Returns Node from front of list
  */ 
-void movenexttofront(List*, const Node*);
+Node* movenexttofront(List*, const Node*);
+
+/* exchangenext
+ * Safe, linear time
+ *
+ * Exchanges the positions of the nodes after the nodes pointed by u and v
+ * Returns NULL if given nodes are not in list, if given nodes are equal or
+ * if one of nodes is last element or tail
+ *
+ * Sets rear_ pointer correctly
+ * Returns one of the exchanged node if everything ok
+ */
+//Node* exchangenext(List*, const Node* u, const Node* v);
 
 
 // User methods

@@ -193,23 +193,37 @@ void free_list(List* list) {
 }
 
 
-void movenexttofront(List* list, const Node* prev_node) {
-	if (prev_node == list->head_ 
-			|| prev_node == list->tail_
-			|| prev_node == list->rear_)
-		return;
-	Node* lpr; // list_prev_node
-	if ((lpr = find_node(list, prev_node)) == NULL) return;
+Node* movenexttofront(List* list, const Node* prev_node) {
+	Node* list_prev_node;
+	if (!(list_prev_node = find_node(list, prev_node))) 
+		return NULL;
+	if (list_prev_node == list->rear_) 
+		return NULL;
 	// 1. List contains at least two nodes
 	// 2. Given node in list and next node is valid
 	
-	list->rear_ = (lpr->next_ == list->rear_) ? lpr : list->rear_;
-	// Exist
-	Node* temp = lpr->next_->next_;
-	lpr->next_->next_ = list->head_->next_;
-	list->head_->next_ = lpr->next_;
-	lpr->next_ = temp;
+	list->rear_ = (list_prev_node->next_ == list->rear_) ? list_prev_node : list->rear_;
+	Node* temp = list_prev_node->next_->next_;
+	list_prev_node->next_->next_ = list->head_->next_;
+	list->head_->next_ = list_prev_node->next_;
+	list_prev_node->next_ = temp;
+
+	return list->head_->next_;
 }
+
+/*
+Node* exchangenext(List* list, const Node* u, const Node* v) {
+	//////////////////////////////////////////////
+	Node* list_u;
+	Node* list_v;
+	if (u == v) return NULL;
+	if (!(list_u = find_node_ht(list, u))) return NULL;
+	if (!(list_v = find_node_ht(list, v))) return NULL;
+	if (list_u == list->tail_ || list_v == list->tail_)
+		return NULL;
+	if (list_u->next_)
+}
+*/
 
 // User methods
 void print_list(const List* list) {
