@@ -23,6 +23,8 @@ typedef struct List {
 
 // Help static methods
 /*
+static Node* swap_neighbours_next_(List*, Node*, Node*);
+static void swap_neighbour_pointers_(Node*, Node*);
 static void check_node_alloc(const Node*);
 static void check_node_number(const List*);
 static void check_rear_correctness(const List*);
@@ -36,7 +38,7 @@ static void check_pop(const List*);
 // General methods
 void init_list(List*);
 
-void push(List*, int);
+Node* push(List*, int);
 
 int pop(List*);
 
@@ -77,12 +79,38 @@ Node* movenexttofront(List*, const Node*);
  * Sets rear_ pointer correctly
  * Returns one of the exchanged node if everything ok
  */
-//Node* exchangenext(List*, const Node* u, const Node* v);
+Node* exchangenext(List*, const Node* u, const Node* v);
 
+/* swap_neighbours
+ * Safe, linear time
+ *
+ * Swaps two neighbour nodes in list after given pointers
+ * Sets rear_ pointer correctly
+ * Returns NULL if given nodes are not neigbours, 
+ * Otherwise return one of the node.
+ */
+//Node* swap_neighbours_next(List*, Node* u, Node* v);
+
+bool compare_lists(const List*, const List*);
+
+Node* get_prev_node(const List*, const Node*);
+
+/* insertafter
+ * Safe, linear time
+ *
+ * Inserts new node after given
+ *
+ */
+Node* insertafter(List*, const Node*, int);
+
+Node* deletenext(List*, const Node*);
+
+List* create_from_array(List*, int arr[], int size);
+
+List* reverselist(List*);
 
 // User methods
 void print_list(const List*);
-
 
 bool is_list_ready(const List*);
 
