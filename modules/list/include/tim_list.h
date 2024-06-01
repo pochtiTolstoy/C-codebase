@@ -111,6 +111,8 @@ List* create_from_array(List*, int arr[], int size);
 
 List* reverselist(List*);
 
+Node* get_middle_node(const List*);
+
 // User methods
 void print_list(const List*);
 

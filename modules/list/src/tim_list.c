@@ -418,6 +418,19 @@ List* reverselist(List* list) {
 	return list;
 }
 
+Node* get_middle_node(const List* list) {
+	Node* turtle = list->head_->next_;
+	Node* rabbit = list->head_->next_;
+	while (rabbit->next_ != list->tail_
+			&& rabbit->next_->next_ != list->tail_) {
+		turtle = turtle->next_;
+		rabbit = rabbit->next_->next_;
+	}
+	if (rabbit->next_ != list->tail_) 
+		return turtle->next_;
+	return turtle;
+}
+
 // User methods
 void print_list(const List* list) {
 	if (!is_list_ready(list) || is_list_empty(list)) return;	
