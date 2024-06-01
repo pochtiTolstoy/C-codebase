@@ -33,6 +33,7 @@ static void inc_size(List*);
 static void dec_size(List*);
 static void check_clear_method(const List*);
 static void check_pop(const List*);
+static void set_rear_pointer_(List*);
 */
 
 // General methods
@@ -93,13 +94,14 @@ Node* exchangenext(List*, const Node* u, const Node* v);
 
 bool compare_lists(const List*, const List*);
 
+List* sort_list(List*);
+
 Node* get_prev_node(const List*, const Node*);
 
 /* insertafter
  * Safe, linear time
  *
  * Inserts new node after given
- *
  */
 Node* insertafter(List*, const Node*, int);
 
@@ -112,11 +114,15 @@ List* reverselist(List*);
 // User methods
 void print_list(const List*);
 
+void print_node(const Node*);
+
 bool is_list_ready(const List*);
 
 bool is_list_empty(const List*);
 
 bool is_list_full(const List*);
+
+bool is_list_valid(const List*);
 
 /* find_node
  * Finds node in list and return non-constant pointer to this node.
@@ -146,9 +152,20 @@ Node* find_key(const List*, int);
  */
 Node* find_key_ht(const List*, int);
 
+/* find_at
+ * 
+ * Find node by given index
+ *
+ */
+Node* find_at(const List*, int);
+
 int get_list_capacity(void);
 
 int get_list_size(const List*);
 
+// Code which should be in other files in future
+void merge(int arr[], int, int, int);
+
+void merge_sort(int arr[], int, int);
 
 #endif /* LIST_H_ */

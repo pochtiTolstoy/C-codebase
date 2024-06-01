@@ -26,7 +26,8 @@ static void check_pop(const List* list) {
 	if (is_list_empty(list)) {
 		fprintf(stderr, "List is empty for pop method. Abort.\n");
 		abort();
-	} }
+	} 
+}
 
 static void check_node_alloc(const Node* node) {
 	if (NULL == node) {
@@ -82,6 +83,18 @@ static void check_rear_correctness(const List* list) {
 		fprintf(stderr, "Rear pointer is Invalid. Abort.\n");
 		abort();
 	}
+}
+
+static Node* set_rear_pointer_(List* list) {
+	if (list->rear_ == NULL) return NULL;
+	if (list->rear_->next_ == list->tail_) return list->rear_;
+	list->rear_ = NULL;
+	Node* ptr = list->head_->next_;
+	while (ptr != ptr->next_) {
+		list->rear_ = ptr;	
+		ptr = ptr->next_;
+	}
+	return list->rear_;
 }
 
 // General methods
@@ -282,6 +295,33 @@ bool compare_lists(const List* l1, const List* l2) {
 			&& l2->rear_->next_ == l2->tail_;
 }
 
+List* sort_list(List* list) {
+	if (!is_list_valid(list)) return NULL;
+	if (list->size_ < 2) return list;
+
+	// Store keys of list in array
+	int* arr = (int*) malloc(sizeof(int) * list->size_);
+	Node* ptr = list->head_->next_;
+	for (int i = 0; i < list->size_; ++i) {
+		arr[i] = ptr->key_;
+		ptr = ptr->next_;
+	}
+	
+	merge_sort(arr, 0, list->size_ - 1);
+
+	// Put sorted keys in list
+	ptr = list->head_->next_;
+	for (int i = 0; i < list->size_; ++i) {
+		ptr->key_ = arr[i];
+		ptr = ptr->next_;
+	}
+
+	// Deallocating
+	free(arr);
+
+	return list;	
+}
+
 Node* get_prev_node(const List* list, const Node* node) {
 	Node* prev_node = list->head_;
 	while (prev_node != prev_node->next_) { // only tail has this property
@@ -360,7 +400,22 @@ List* reverselist(List* list) {
 	p1 = list->head_->next_;
 	p2 = p1->next_;
 	p3 = p2->next_;
+	
+	p1->next_ = list->tail_;
+	list->head_->next_ = list->rear_;		
 
+	// set rear pointer
+	list->rear_ = p1;
+
+	while (p3 != p3->next_) { // only tail has this property
+		p2->next_ = p1;
+		p1 = p2;
+		p2 = p3;
+		p3 = p3->next_;
+	}
+	p2->next_ = p1;
+
+	return list;
 }
 
 // User methods
@@ -374,12 +429,47 @@ void print_list(const List* list) {
 	putchar('\n');
 }
 
+void print_node(const Node* node) {
+	if (node == NULL) return;
+	printf("key: %d, next: %p\n", node->key_, node->next_);
+}
+
 bool is_list_empty(const List* list) {
   return list->size_ == 0;
 }
 
 bool is_list_full(const List* list) {
 	return list->size_ == MAX_SIZE_LIST;
+}
+
+bool is_list_valid(const List* list) {
+	if (list == NULL 
+			|| list->head_ == NULL 
+			|| list->tail_ == NULL
+			|| list->tail_->next_ == NULL
+			|| list->tail_->next_ != list->tail_
+			|| list->size_ < 0
+			|| list->head_->next_ == NULL)
+		return false;
+
+	if (list->head_->next_ == list->tail_
+			&& list->size_ == 0
+			&& list->rear_ == NULL)
+		return true;
+
+	Node* ptr = list->head_->next_;
+	int count_elems = 0;
+	while (ptr != ptr->next_ && count_elems < MAX_SIZE_LIST) {
+		++count_elems;
+		ptr = ptr->next_;
+	}
+
+	if (ptr == list->tail_
+			&& count_elems == list->size_
+			&& list->rear_->next_ == list->tail_)
+		return true;
+
+	return false;
 }
 
 Node* find_node(const List* list, const Node* node) {
@@ -432,6 +522,13 @@ Node* find_key_ht(const List* list, int key) {
 	return (ptr->key_ == key) ? ptr : NULL;
 }
 
+Node* find_at(const List* list, int index) {
+	if (index < 0 || index >= get_list_size(list)) return NULL;
+	Node* ptr = list->head_->next_;
+	while (index--) ptr = ptr->next_;
+	return ptr;
+}
+
 int get_list_size(const List* list) {
 	return list->size_;
 }
@@ -442,4 +539,29 @@ int get_list_capacity(void) {
 
 bool is_list_ready(const List* list) {
 	return (NULL != list->head_ && NULL != list->tail_);
+}
+
+// Code which should be in other files in future
+void merge(int arr[], int l, int m, int r) {
+	int i = l;
+	int j = m + 1;
+	int temp_size = r - l + 1;
+	int k = 0;
+	int* temp = (int*) malloc(sizeof(int) * temp_size);
+	while (i <= m && j <= r)
+		temp[k++] = (arr[i] <= arr[j]) ? arr[i++] : arr[j++];
+	while (i <= m) temp[k++] = arr[i++];
+	while (j <= r) temp[k++] = arr[j++];
+	for (int idx = 0; idx < temp_size; ++idx)
+		arr[l + idx] = temp[idx];
+	free(temp);
+}
+
+void merge_sort(int arr[], int l, int r) {
+	if (l < r) {
+		int m = l + (r - l) / 2;
+		merge_sort(arr, l, m);
+		merge_sort(arr, m + 1, r);
+		merge(arr, l, m, r);
+	}
 }
