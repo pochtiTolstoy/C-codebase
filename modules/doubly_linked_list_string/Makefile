@@ -6,7 +6,7 @@ SRCS = $(wildcard $(SRC)/*.c)
 #BIN_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 #LIB_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 BIN_OBJS = $(OBJ)/tim_dl_list_s.o $(OBJ)/main.o
-LIB_OBJS = $(OBJ)/tim_dl_list.o
+LIB_OBJS = $(OBJ)/tim_dl_list_s.o
 
 HPP = include
 
@@ -16,10 +16,10 @@ TESTBINS = $(patsubst $(TEST)/%.c, $(TEST)/bin/%, $(TESTS))
 
 
 BINDIR = bin
-BIN = $(BINDIR)/list
+BIN = $(BINDIR)/dl_list
 
 LIBDIR = lib
-LIB = $(LIBDIR)/tim_list.a
+LIB = $(LIBDIR)/tim_dl_list_s.a
 
 all: $(LIB) $(BIN)
 

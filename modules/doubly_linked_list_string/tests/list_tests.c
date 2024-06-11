@@ -3,7 +3,5 @@
 
 Test(list_tests, initialization) {
 	cr_assert(
-			0 == 0, 
-			"Test..."
 	);
 }
