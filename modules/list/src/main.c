@@ -13,7 +13,7 @@ void print_arr(int arr[], int size) {
 int main(void) {
 	List list;
 	init_list(&list);
-	int arr[] = { 1, 2, 3, 4, 5, 6 };
+	int arr[] = { 1, 2, 3 };
 	int size = sizeof(arr) / sizeof(arr[0]);
 	print_list(create_from_array(&list, arr, size));
 	print_node(get_middle_node(&list));
