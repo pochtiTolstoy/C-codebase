@@ -1,1 +1,1 @@
-# Doubly linked list with head allocated strings
+# Doubly linked list with heap allocated strings
