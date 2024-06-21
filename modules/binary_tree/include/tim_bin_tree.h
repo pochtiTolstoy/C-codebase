@@ -18,17 +18,7 @@ static const int MAX_NUM_DUPLICATES = 1000000;
  */
 
 /* TODO:
- * DO: insert      - get key and allocate new node in binary tree
- * DO: delete      - clears all tree
- * search      - find by key, find by node
- * minimum     - return minimal element in tree
- * maximum     - return minimal element in tree
- * lowerbound  - maximum element in tree less than the given key
- * upperbound  - minimum element in tree greater than the given key
- * delete_node - delete node with all duplicates and change struct of tree.
- * delete_key  - reduces the number in a node if there are duplicates
- *               otherwise calls delete_node
- * DO: print_tree  - prints tree using inorder tree walk
+ * delete node
  */
 
 /* Static methods:
@@ -53,6 +43,16 @@ typedef Bin_tree BST;
 
 void init_bst(BST*);
 Node* insert_key(BST*, int);
+Node* find_key(BST*, int);
+Node* get_min(Node*);
+Node* get_max(Node*);
+
+/* upper_bound
+ * Search first element that is greater than i
+ */
+Node* upper_bound(Node*);
+
+Node* lower_bound(Node*);
 void traverse_inorder(BST*, void (*)(Node*));
 void traverse_postorder(BST*, void (*)(Node*));
 

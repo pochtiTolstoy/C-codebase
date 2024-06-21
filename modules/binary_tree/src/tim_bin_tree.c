@@ -61,6 +61,54 @@ Node* insert_key(BST* tree, int key) {
   return new_node;
 }
 
+Node* find_key(BST* tree, int key) {
+  if (tree == NULL) return NULL;
+  Node* walk_node = tree->root_;
+  while (walk_node != NULL && key != walk_node->key_)
+    walk_node = (key < walk_node->key_) 
+              ? walk_node->left_ 
+              : walk_node->right_;
+  return walk_node;
+}
+
+Node* get_min(Node* node) {
+  if (node == NULL) return NULL;
+  while (node->left_ != NULL) 
+    node = node->left_;
+  return node;
+}
+
+Node* get_max(Node* node) {
+  if (node == NULL) return NULL;
+  while (node->right_ != NULL)
+    node = node->right_;
+  return node;
+}
+
+Node* upper_bound(Node* node) {
+  if (node == NULL) return NULL;
+  if (node->right_ != NULL)
+    return get_min(node->right_);
+  Node* prev_node = node->parent_;
+  while (prev_node != NULL && node == prev_node->right_) {
+    node = prev_node; 
+    prev_node = prev_node->parent_;
+  }
+  return prev_node;
+}
+
+Node* lower_bound(Node* node) {
+  if (node == NULL) return NULL;
+  if (node->left_ != NULL)
+    return get_max(node->left_);
+  Node* prev_node = node->parent_;
+  while (prev_node != NULL && node == prev_node->left_) {
+    node = prev_node;
+    prev_node = prev_node->parent_;
+  }
+  return prev_node; 
+}
+
 // Runs through tree
 void traverse_inorder(BST* tree, void (*predicate)(Node*)) {
   if (tree == NULL) return;
