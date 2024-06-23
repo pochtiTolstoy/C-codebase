@@ -1,3 +1,3 @@
-# Singly-linked list
+# Binary search tree
 
-Can immitate stack and queue
+No balance
