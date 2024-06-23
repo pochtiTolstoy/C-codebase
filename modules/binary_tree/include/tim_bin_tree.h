@@ -6,8 +6,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/*
 static const int MAX_SIZE_TREE = 1000000;
 static const int MAX_NUM_DUPLICATES = 1000000;
+*/
 
 
 /* INFO:
@@ -19,12 +21,11 @@ static const int MAX_NUM_DUPLICATES = 1000000;
 
 /* TODO:
  * delete node
- */
-
-/* Static methods:
- * check_node_alloc_  - check bad alloc
- * traverse_inorder_  - work with nodes, not a tree root.
- * free_node_ - calls free on given node
+ * delete key
+ * non recursive traverse
+ * sort array
+ * add nodes limits
+ * add size
  */
 
 typedef struct Node {
@@ -37,15 +38,18 @@ typedef struct Node {
 
 typedef struct Bin_tree {
   struct Node* root_; 
+  int num_nodes_;
 } Bin_tree;
 
 typedef Bin_tree BST;
 
 void init_bst(BST*);
 Node* insert_key(BST*, int);
+void delete_node(BST*, Node*);
 Node* find_key(BST*, int);
 Node* get_min(Node*);
 Node* get_max(Node*);
+int size(BST*);
 
 /* upper_bound
  * Search first element that is greater than i

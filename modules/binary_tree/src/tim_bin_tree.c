@@ -21,6 +21,18 @@ static void traverse_postorder_(Node* node, void (*predicate)(Node*)) {
   (*predicate)(node);
 }
 
+// unsafe
+static void transplant_(BST* tree, Node* u, Node* v) {
+  if (u->parent_ == NULL)
+    tree->root_ = v;
+  else if (u == u->parent_->left_)
+    u->parent_->left_ = v;
+  else
+    u->parent_->right_ = v;
+  if (v != NULL)
+    v->parent_ = u->parent_;
+}
+
 static void free_node_(Node* node) {
   if (node == NULL) return;
   free(node);
@@ -28,6 +40,7 @@ static void free_node_(Node* node) {
 
 void init_bst(BST* tree) {
   tree->root_ = NULL;
+  tree->num_nodes_ = 0;
 }
 
 Node* insert_key(BST* tree, int key) {
@@ -47,6 +60,7 @@ Node* insert_key(BST* tree, int key) {
   }
   Node* new_node = (Node*) malloc(sizeof(Node));
   check_node_alloc_(new_node);
+  ++tree->num_nodes_;
   new_node->left_ = NULL;
   new_node->right_ = NULL;
   new_node->key_ = key;
@@ -59,6 +73,29 @@ Node* insert_key(BST* tree, int key) {
   else
     prev_node->right_ = new_node;
   return new_node;
+}
+
+void delete_node(BST* tree, Node* del_node) {
+  if (del_node->left_ == NULL) {
+    transplant_(tree, del_node, del_node->right_);
+    return free(del_node);
+  }
+  if (del_node->right_ == NULL) {
+    transplant_(tree, del_node, del_node->left_);
+    return free(del_node);
+  }
+  Node* rotate_node = get_min(del_node->right_);
+  if (rotate_node->parent_ != del_node) {
+    transplant_(tree, rotate_node, rotate_node->right_);
+    rotate_node->right_ = del_node->right_;
+    rotate_node->right_->parent_ = rotate_node;
+  }
+  transplant_(tree, del_node, rotate_node);
+  rotate_node->left_ = del_node->left_;
+  rotate_node->left_->parent_ = rotate_node;
+  free(del_node);
+
+  --tree->num_nodes_;
 }
 
 Node* find_key(BST* tree, int key) {
@@ -83,6 +120,14 @@ Node* get_max(Node* node) {
   while (node->right_ != NULL)
     node = node->right_;
   return node;
+}
+
+int size(BST* tree) {
+  if (tree == NULL) {
+    fprintf(stderr, "Method size(int) error: Null tree\nAbort.\n");
+    abort();
+  }
+  return tree->num_nodes_;
 }
 
 Node* upper_bound(Node* node) {
@@ -123,6 +168,7 @@ void traverse_postorder(BST* tree, void (*predicate)(Node*)) {
 void delete_bst(BST* tree) {
   traverse_postorder(tree, free_node_);
   tree->root_ = NULL;
+  tree->num_nodes_ = 0;
 }
 
 void print_bst_nodes(BST* tree) {
@@ -147,4 +193,3 @@ void print_key(Node* node) {
   if (node == NULL) return;
   printf("%d ", node->key_);
 }
-
