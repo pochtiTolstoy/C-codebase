@@ -40,9 +40,9 @@ typedef struct Node {
 typedef struct Bin_tree {
   struct Node* root_; 
   int num_nodes_;
-} Bin_tree;
+} bin_tree;
 
-typedef Bin_tree BST;
+typedef bin_tree BST;
 
 void init_bst(BST*);
 Node* insert_key(BST*, int);
