@@ -25,7 +25,8 @@ static const int MAX_NUM_DUPLICATES = 1000000;
  * non recursive traverse
  * sort array
  * add nodes limits
- * add size
+ * lower_bound(int)
+ * upper_bound(int)
  */
 
 typedef struct Node {
