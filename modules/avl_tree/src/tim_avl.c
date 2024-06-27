@@ -4,7 +4,7 @@ static u32 max_(u32 a, u32 b) {
   return (a < b) ? b : a;
 }
 
-static void check_node_alloc_(const Node* node) {
+static void check_node_alloc_(Node* node) {
   if (NULL == node) {
     fprintf(stderr, "%s\n", "Tree bad allocation. Abort.");
     abort();
@@ -110,12 +110,14 @@ static Node* create_node_(int key) {
   new_node->right_   = NULL;
   new_node->parent_  = NULL;
   new_node->key_     = key;
-  new_node->num_key_ = 0;
+  new_node->num_key_ = 1;
   new_node->height_  = 1;
+
+  return new_node;
 }
 
-static Node* insert_key_(Node* node, int key) {
-  u32 node_balance;
+static Node* insert_key_(Node* node, int key, u32* num_node) {
+  int node_balance;
 
   /* 1. Going down. 
    *
@@ -124,7 +126,10 @@ static Node* insert_key_(Node* node, int key) {
    *
    */
 
-  if (NULL == node) return create_node(key); /* found place for new node */
+  if (NULL == node) { /* found place for new node */
+    ++*num_node;
+    return create_node_(key); 
+  } 
   
   /* if the same key was found in an existing node,
    * then the tree structure should remain the same
@@ -137,14 +142,14 @@ static Node* insert_key_(Node* node, int key) {
 
   if (key < node->key_) {
     /* Let's try to find a place for a new node in the left subtree */
-    node->left_ = insert_key_(node->left_, key); 
+    node->left_ = insert_key_(node->left_, key, num_node); 
 
     /* Fix parent of returned node, perfectly works with balance */
     node->left_->parent_ = node;         
 
   } else if (key > node->key_){   
     /* Let's try to find a place for a new node in the right subtree */
-    node->right_ = insert_key_(node->right_, key);
+    node->right_ = insert_key_(node->right_, key, num_node);
 
     /* Fix parent of returned node, perfectly works with balance */
     node->right_->parent_ = node;
@@ -165,8 +170,8 @@ static Node* insert_key_(Node* node, int key) {
   /* Update the balance variable of current node */
   node_balance = get_balance_(node);
 
-#define MAX_TRESHOLD 1
-#define MIN_TRESHOLD -1
+#define MAX_BALANCE_TRESHOLD 1
+#define MIN_BALANCE_TRESHOLD -1
 
   /* LL-case: 
    *
@@ -175,7 +180,9 @@ static Node* insert_key_(Node* node, int key) {
    * of the left child of our node.
    *
    */
-  if (node_balance > MAX_TRESHOLD && key < node->left_->key_)
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && key < node->left_->key_)
     return right_rotate_(node); /* parent will be fixed after nearest return */
 
   /* RR-case:
@@ -185,7 +192,9 @@ static Node* insert_key_(Node* node, int key) {
    * of the right child of our node.
    *
    */
-  if (node_balance < MIN_TRESHOLD && key > node->right_->key_)
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && key > node->right_->key_)
     return left_rotate_(node); /* parent will be fixed after nearest return */
 
   /* LR-case:
@@ -195,13 +204,15 @@ static Node* insert_key_(Node* node, int key) {
    * of the left child of our node.
    *
    */
-  if (node_balance > MAX_TRESHOLD && key > node->left_->key_) {
-    node->left_ = rotate_left_(node->left_);
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && key > node->left_->key_) {
+    node->left_ = left_rotate_(node->left_);
     node->left_->parent_ = node;
-    node = rotate_right_(node); /* after return parent will be fixed,
+    node = right_rotate_(node); /* after return parent will be fixed,
                                    or will be null if caller is root */
   }
-  
+
   /* RL-case:
    *
    * Disbalance occured in the current node,
@@ -209,10 +220,12 @@ static Node* insert_key_(Node* node, int key) {
    * of the right child of our node.
    *
    */
-  if (node_balance < MIN_TRESHOLD && key < node->right_->key_) {
-    node->right_ = rotate_right_(node->right_);
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && key < node->right_->key_) {
+    node->right_ = right_rotate_(node->right_);
     node->right_->parent_ = node;
-    node = rotate_left(node); /* after return parent will be fixed,
+    node = left_rotate_(node); /* after return parent will be fixed,
                                  or will be null if caller is root */
   }
 
@@ -228,13 +241,18 @@ void init_avl(AVL* tree) {
 
 Node* insert_key(AVL* tree, int key) {
   if (NULL == tree) return NULL;
-  tree->root_ = insert_key_(tree->root_, key);  
+  return (tree->root_ = insert_key_(tree->root_, key, &tree->num_node_));
 }
 
 void delete_avl(AVL* tree) {
   traverse_postorder(tree, free_node_);
   tree->root_     = NULL;
   tree->num_node_ = 0;
+}
+
+u32 get_avl_size(AVL* tree) {
+  if (NULL == tree) return 0;
+  return tree->num_node_;
 }
 
 u32 get_height(const Node* node) {
@@ -252,6 +270,7 @@ void traverse_inorder(AVL* tree, void (*predicate)(Node*)) {
 }
 
 void print_avl_nodes(AVL* tree) {
+  print_root(tree);
   traverse_inorder(tree, print_node);
 }
 
@@ -260,12 +279,26 @@ void print_avl(AVL* tree) {
   putchar('\n');
 }
 
+void print_root(AVL* tree) {
+  if (NULL == tree) return;
+  printf("root      : %p \n", tree->root_    );
+  printf("num nodes : %u \n", tree->num_node_);
+  putchar('\n');
+}
+
 void print_node(Node* node) {
-  if (node == NULL) return;
-  printf("Node      : %p.\n", node          );
-  printf("--key     : %d,\n", node->key_    );
-  printf("--num_key : %u,\n", node->num_key_);
-  printf("--height  : %u.\n", node->height_ );
+  if (NULL == node) return;
+  printf("=============================\n");
+  printf("|Node      : %-14p |\n", (void*)node);
+  printf("|---------------------------|\n");
+  printf("|--left    : %-14p |\n", (void*)node->left_);
+  printf("|--right   : %-14p |\n", (void*)node->right_);
+  printf("|--parent  : %-14p |\n", (void*)node->parent_);
+  printf("|---------------------------|\n");
+  printf("|--key     : %-14d |\n", node->key_);
+  printf("|--num_key : %-14u |\n", node->num_key_);
+  printf("|--height  : %-14u |\n", node->height_);
+  printf("=============================\n");
   putchar('\n');
 }
 

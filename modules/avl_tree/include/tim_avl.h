@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
 
 /* TODO: delete_key, find_key, get_min, get_max 
  *       upper_bound, lower_bound, size 
@@ -36,7 +38,10 @@ void traverse_postorder(AVL*, void (*)(Node*));
 void delete_avl(AVL*);
 void print_avl_nodes(AVL*);
 void print_avl(AVL*);
+void print_root(AVL*);
 void print_node(Node*);
 void print_key(Node*);
+
+u32 get_avl_size(AVL*);
 
 #endif /* AVL_TREE_ */
