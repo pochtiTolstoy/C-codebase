@@ -56,14 +56,11 @@ int size(BST*);
  * Search first element that is greater than i
  */
 Node* upper_bound(Node*);
-
 Node* lower_bound(Node*);
+
 void traverse_inorder(BST*, void (*)(Node*));
 void traverse_postorder(BST*, void (*)(Node*));
 
-/* free_node
- * Do not care about tree structure!
- */
 void delete_bst(BST*);
 void print_node(Node*);
 void print_key(Node*);

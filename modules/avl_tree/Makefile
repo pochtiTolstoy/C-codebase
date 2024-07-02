@@ -1,10 +1,10 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -Wextra -Wno-unused-function
 SRC = src
 OBJ = obj
 SRCS = $(wildcard $(SRC)/*.c) 
-BIN_OBJS = $(OBJ)/tim_avl.o $(OBJ)/main.o
-LIB_OBJS = $(OBJ)/tim_avl.o
+BIN_OBJS = $(OBJ)/predicate_module.o $(OBJ)/tim_avl.o $(OBJ)/main.o $(OBJ)/util.o
+LIB_OBJS = $(OBJ)/tim_avl.o $(OBJ)/predicate_module.o $(OBJ)/util.o
 
 HPP = include
 
@@ -21,7 +21,7 @@ LIB = $(LIBDIR)/tim_avl.a
 
 all: $(LIB) $(BIN)
 
-release: CFLAGS = -Wall -O2 -DNDEBUG
+release: CFLAGS = -Wall -Wextra -O2 -DNDEBUG
 release: clean
 release: $(LIB)
 

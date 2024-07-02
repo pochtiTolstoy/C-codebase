@@ -1,55 +1,105 @@
 #include "../include/tim_avl.h"
 
-static u32 max_(u32 a, u32 b) {
+
+static u32 max_(u32 a, u32 b) 
+{
   return (a < b) ? b : a;
 }
 
-static void check_node_alloc_(Node* node) {
-  if (NULL == node) {
+static void check_alloc_(void* p) 
+{
+  if (NULL == p) {
     fprintf(stderr, "%s\n", "Tree bad allocation. Abort.");
     abort();
   }
 }
 
-static void check_null_node_(const Node* node) {
+static void check_null_node_(const Node* node) 
+{
   if (NULL == node) {
     fprintf(stderr, "%s\n", "Node is NULL. Abort.");
     abort();
   }
 }
 
-static void free_node_(Node* node) {
+static void free_node_(Node* node) 
+{
   if (NULL == node)  return;
   free(node);
 }
 
-static void traverse_inorder_(Node* node, void (*predicate)(Node*)) {
+/* traversing mechanism, should be used from wrappers */
+static void traverse_inorder_(Node* node, predmodule* predmod) 
+{
   if (NULL == node) return;
-  traverse_inorder_(node->left_,  predicate);
-  (*predicate)(node);
-  traverse_inorder_(node->right_, predicate);
+
+  traverse_inorder_(node->left_, predmod);
+  switch (predmod->state) {
+    case SIMPLE:
+      (*(predfunc_simple)predmod->pred)(node);
+      break;
+    default:
+      (*(predfunc)predmod->pred)(node, predmod);
+  }
+  traverse_inorder_(node->right_, predmod);
 }
 
-static void traverse_postorder_(Node* node, void (*predicate)(Node*)) {
+static void traverse_postorder_(Node* node, void (*predicate)(Node*)) 
+{
   if (NULL == node) return;
   traverse_postorder_(node->left_,  predicate);
   traverse_postorder_(node->right_, predicate);
   (*predicate)(node);
 }
 
-static u32 get_balance_(const Node* node) {
+/* accumulating predicate */
+static void count_keys_in_node_(Node* node, predmodule* predmod) 
+{
+  if (NULL == node) return;
+  *(u32*)predmod->accumulator += node->num_key_;
+}
+
+/* storage predicate */
+static void copy_to_array_(Node* node, predmodule* predmod) 
+{
+  int** iter;
+  if (NULL == node) return;
+  iter = (int**)&predmod->sd.storage_current;
+  for (u32 i = 0; i < node->num_key_; ++i, ++*iter)
+    **iter = node->key_; 
+}
+
+/* cmp predicate */
+static void cmp_keys_(Node* node, predmodule* predmod) {
+  int **iter, *end;
+  u32 i;
+  if (!predmod->cd.equals) return;
+  iter = (int**)&predmod->sd.storage_current;
+  end = (int*)predmod->sd.storage_end;
+  for (i = 0; i < node->num_key_; ++i, ++*iter) {
+    if (*iter == end || **iter != node->key_) {
+      predmod->cd.equals = false;
+      return;
+    }
+  }
+}
+
+static u32 get_balance_(const Node* node) 
+{
   check_null_node_(node);
   return (get_height(node->left_) - get_height(node->right_));
 }
 
-static u32 get_recalc_height_(const Node* node) {
+static u32 get_recalc_height_(const Node* node) 
+{
   check_null_node_(node);
 #define THIS_NODE 1
   return THIS_NODE + max_(get_height(node->left_), get_height(node->right_));
 }
 
 /* turn x clockwise */
-static Node* right_rotate_(Node* x) {
+static Node* right_rotate_(Node* x) 
+{
   Node *y, *z;
 
   /* check valid form */
@@ -76,7 +126,8 @@ static Node* right_rotate_(Node* x) {
 }
 
 /* turn x counter clockwise */
-static Node* left_rotate_(Node* x) {
+static Node* left_rotate_(Node* x) 
+{
   Node *y, *z;
 
   /* check valid form */
@@ -101,10 +152,11 @@ static Node* left_rotate_(Node* x) {
   return y;
 }
 
-static Node* create_node_(int key) {
+static Node* create_node_(int key) 
+{
   Node* new_node = (Node*) malloc(sizeof(Node));
 
-  check_node_alloc_(new_node);
+  check_alloc_(new_node);
 
   new_node->left_    = NULL;
   new_node->right_   = NULL;
@@ -116,7 +168,8 @@ static Node* create_node_(int key) {
   return new_node;
 }
 
-static Node* insert_key_(Node* node, int key, u32* num_node) {
+static Node* insert_key_(Node* node, int key, u32* num_node) 
+{
   int node_balance;
 
   /* 1. Going down. 
@@ -209,7 +262,7 @@ static Node* insert_key_(Node* node, int key, u32* num_node) {
       && key > node->left_->key_) {
     node->left_ = left_rotate_(node->left_);
     node->left_->parent_ = node;
-    node = right_rotate_(node); /* after return parent will be fixed,
+    return right_rotate_(node); /* after return parent will be fixed,
                                    or will be null if caller is root */
   }
 
@@ -225,68 +278,170 @@ static Node* insert_key_(Node* node, int key, u32* num_node) {
       && key < node->right_->key_) {
     node->right_ = right_rotate_(node->right_);
     node->right_->parent_ = node;
-    node = left_rotate_(node); /* after return parent will be fixed,
+    return left_rotate_(node); /* after return parent will be fixed,
                                  or will be null if caller is root */
   }
 
-  return node; /* can be changed after balance */
+  return node; /* no balance */
 }
 
 /* USER METHODS ========================================================== */
 
-void init_avl(AVL* tree) {
+void init_avl(AVL* tree) 
+{
   tree->root_ = NULL;
   tree->num_node_ = 0;
 }
 
-Node* insert_key(AVL* tree, int key) {
+Node* insert_key(AVL* tree, int key) 
+{
   if (NULL == tree) return NULL;
   return (tree->root_ = insert_key_(tree->root_, key, &tree->num_node_));
 }
 
-void delete_avl(AVL* tree) {
-  traverse_postorder(tree, free_node_);
+Node* create_avl_from_array(AVL* tree, int arr[], u32 size) 
+{
+  if (size < 1) return tree->root_;
+  for (u32 i = 0; i < size; ++i)
+    insert_key(tree, arr[i]);
+  return tree->root_;
+}
+
+/* slow */
+int* create_arr_from_avl(AVL* tree) 
+{
+  predmodule predmod;
+  int* arr;
+  u32 size;
+
+  if (is_avl_empty(tree)) {
+    puts("Warning: attempt to create an array from a null tree.");
+    puts("returned NULL");
+    return NULL;
+  }
+
+  size = get_avl_num_elems(tree); /* O(n) */
+  arr = (int*) malloc(sizeof(int) * size);
+  check_alloc_(arr);
+
+  init_predmod(&predmod, STORE);
+  set_predicate(&predmod, copy_to_array_);
+  set_storage(&predmod, arr, arr + size);
+
+  traverse_inorder_(tree->root_, &predmod);
+  
+  return arr; /* should be deallocated */
+}
+
+bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
+  predmodule predmod;
+
+  if (NULL == tree || size == 0) return false;
+  
+  init_predmod(&predmod, COMPARE);
+  set_predicate(&predmod, cmp_keys_);
+  set_storage(&predmod, arr, arr + size);
+
+  traverse_inorder_(tree->root_, &predmod);
+
+  return predmod.cd.equals;
+}
+
+bool is_avl_valid(AVL* tree) {
+  predmodule predmod; 
+  bool res;
+
+  if (tree == NULL) return false;
+  if (tree->root_ == NULL && tree->num_node_ == 0)
+    return true;
+
+  init_predmod(&predmod, READ);
+  set_predicate(&predmod, );
+  create_avl_data(&predmod);
+  traverse_inorder_(tree->root_, &predmod);
+//===================================================NO COMPILE
+  res = predmod.ad->valid;
+  free_avl_data(&predmod);
+
+  return res;
+}
+
+u32 get_avl_num_elems(AVL* tree) 
+{
+  predmodule predmod;
+  u32 sum = 0;
+
+  if (NULL == tree) return sum;
+
+  init_predmod(&predmod, ACCUMULATE);
+  set_predicate(&predmod, count_keys_in_node_);
+  set_accumulator(&predmod, &sum);
+
+  traverse_inorder_(tree->root_, &predmod); 
+
+  return sum;
+}
+
+void delete_avl(AVL* tree) 
+{
+  traverse_postorder_(tree->root_, free_node_);
   tree->root_     = NULL;
   tree->num_node_ = 0;
 }
 
-u32 get_avl_size(AVL* tree) {
+u32 get_avl_size(AVL* tree) 
+{
   if (NULL == tree) return 0;
   return tree->num_node_;
 }
 
-u32 get_height(const Node* node) {
+
+u32 get_height(const Node* node) 
+{
   return (NULL != node) ? node->height_ : 0;
 }
 
-void traverse_postorder(AVL* tree, void (*predicate)(Node*)) {
-  if (NULL == tree) return;
-  traverse_postorder_(tree->root_, predicate);
+bool is_avl_empty(AVL* tree) 
+{
+  return (tree->num_node_ == 0);
 }
 
-void traverse_inorder(AVL* tree, void (*predicate)(Node*)) {
+void print_avl_nodes(AVL* tree) 
+{
+  predmodule predmod;
   if (NULL == tree) return;
-  traverse_inorder_(tree->root_, predicate);
-}
 
-void print_avl_nodes(AVL* tree) {
+  init_predmod(&predmod, SIMPLE);
+  set_predicate(&predmod, print_node);
+
   print_root(tree);
-  traverse_inorder(tree, print_node);
+  traverse_inorder_(tree->root_, &predmod);
 }
 
-void print_avl(AVL* tree) {
-  traverse_inorder(tree, print_key);
+void print_avl(AVL* tree) 
+{
+  predmodule predmod;
+
+  if (NULL == tree) return;
+
+  init_predmod(&predmod, SIMPLE);
+  set_predicate(&predmod, print_key);
+
+  traverse_inorder_(tree->root_, &predmod);
+
   putchar('\n');
 }
 
-void print_root(AVL* tree) {
+void print_root(AVL* tree) 
+{
   if (NULL == tree) return;
   printf("root      : %p \n", tree->root_    );
   printf("num nodes : %u \n", tree->num_node_);
   putchar('\n');
 }
 
-void print_node(Node* node) {
+void print_node(Node* node) 
+{
   if (NULL == node) return;
   printf("=============================\n");
   printf("|Node      : %-14p |\n", (void*)node);
@@ -302,7 +457,8 @@ void print_node(Node* node) {
   putchar('\n');
 }
 
-void print_key(Node* node) {
+void print_key(Node* node) 
+{
   if (node == NULL) return;
   printf("%d ", node->key_);
 }
