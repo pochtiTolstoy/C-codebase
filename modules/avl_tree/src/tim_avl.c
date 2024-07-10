@@ -70,12 +70,13 @@ static void copy_to_array_(Node* node, predmodule* predmod)
 }
 
 /* cmp predicate */
-static void cmp_keys_(Node* node, predmodule* predmod) {
+static void cmp_keys_(Node* node, predmodule* predmod) 
+{
   int **iter, *end;
   u32 i;
   if (!predmod->cd.equals) return;
   iter = (int**)&predmod->sd.storage_current;
-  end = (int*)predmod->sd.storage_end;
+  end  = (int*)predmod->sd.storage_end;
   for (i = 0; i < node->num_key_; ++i, ++*iter) {
     if (*iter == end || **iter != node->key_) {
       predmod->cd.equals = false;
@@ -84,7 +85,7 @@ static void cmp_keys_(Node* node, predmodule* predmod) {
   }
 }
 
-static u32 get_balance_(const Node* node) 
+static int get_balance_(const Node* node) 
 {
   check_null_node_(node);
   return (get_height(node->left_) - get_height(node->right_));
@@ -168,61 +169,8 @@ static Node* create_node_(int key)
   return new_node;
 }
 
-static Node* insert_key_(Node* node, int key, u32* num_node) 
+static Node* process_insert_rotation_(Node* node, int node_balance, int key) 
 {
-  int node_balance;
-
-  /* 1. Going down. 
-   *
-   * We will recursively go down the tree,
-   * until we find a correct place for a new node.
-   *
-   */
-
-  if (NULL == node) { /* found place for new node */
-    ++*num_node;
-    return create_node_(key); 
-  } 
-  
-  /* if the same key was found in an existing node,
-   * then the tree structure should remain the same
-   */
-  if (key == node->key_) {
-    assert(node->num_key_ > 0);
-    ++node->num_key_;
-    return node;
-  }
-
-  if (key < node->key_) {
-    /* Let's try to find a place for a new node in the left subtree */
-    node->left_ = insert_key_(node->left_, key, num_node); 
-
-    /* Fix parent of returned node, perfectly works with balance */
-    node->left_->parent_ = node;         
-
-  } else if (key > node->key_){   
-    /* Let's try to find a place for a new node in the right subtree */
-    node->right_ = insert_key_(node->right_, key, num_node);
-
-    /* Fix parent of returned node, perfectly works with balance */
-    node->right_->parent_ = node;
-
-  }
-
-  /* 2. Going up.
-   *
-   * From this moment we have found a place for the new node,
-   * and now we begin to climb up the recursion and gradually
-   * correct the balance in the nodes until we reach the root.
-   *
-   */
-
-  /* Recalculate new height of given node */
-  node->height_ = get_recalc_height_(node);
-
-  /* Update the balance variable of current node */
-  node_balance = get_balance_(node);
-
 #define MAX_BALANCE_TRESHOLD 1
 #define MIN_BALANCE_TRESHOLD -1
 
@@ -282,7 +230,184 @@ static Node* insert_key_(Node* node, int key, u32* num_node)
                                  or will be null if caller is root */
   }
 
-  return node; /* no balance */
+  return node;
+}
+
+static Node* insert_key_(Node* node, int key, u32* num_node) 
+{
+  int node_balance;
+
+  /* 1. Going down. 
+   *
+   * We will recursively go down the tree,
+   * until we find a correct place for a new node.
+   *
+   */
+
+  if (NULL == node) { /* found place for new node */
+    ++*num_node;
+    return create_node_(key); 
+  } 
+  
+  /* if the same key was found in an existing node,
+   * then the tree structure should remain the same
+   */
+  if (key == node->key_) {
+    assert(node->num_key_ > 0);
+    ++node->num_key_;
+    return node;
+  }
+
+  if (key < node->key_) {
+    /* Let's try to find a place for a new node in the left subtree */
+    node->left_ = insert_key_(node->left_, key, num_node); 
+
+    /* Fix parent of returned node, perfectly works with balance */
+    node->left_->parent_ = node;         
+
+  } else if (key > node->key_) {   
+    /* Let's try to find a place for a new node in the right subtree */
+    node->right_ = insert_key_(node->right_, key, num_node);
+
+    /* Fix parent of returned node, perfectly works with balance */
+    node->right_->parent_ = node;
+
+  }
+
+  /* 2. Going up.
+   *
+   * From this moment we have found a place for the new node,
+   * and now we begin to climb up the recursion and gradually
+   * correct the balance in the nodes until we reach the root.
+   *
+   */
+
+  /* Recalculate new height of given node */
+  node->height_ = get_recalc_height_(node);
+
+  /* Update the balance variable of current node */
+  node_balance = get_balance_(node);
+
+  return process_insert_rotation_(node, node_balance, key);
+}
+
+
+static Node* process_delete_rotation_(Node* node, int node_balance) {
+#define MAX_BALANCE_TRESHOLD 1
+#define MIN_BALANCE_TRESHOLD -1
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && get_balance_(node->left_) >= 0)
+    return right_rotate_(node);
+
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && get_balance_(node->right_) <= 0)
+    return left_rotate_(node);
+
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && get_balance_(node->left_) < 0) {
+    node->left_ = left_rotate_(node->left_);
+    node->left_->parent_ = node;
+    return right_rotate_(node);
+  }
+
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && get_balance_(node->right_) > 0) {
+    node->right_ = right_rotate_(node->right_);
+    node->right_->parent_ = node;
+    return left_rotate_(node);
+  }
+
+  return node;
+}
+
+static void transplant_(AVL* tree, Node* u, Node* v) {
+  if (NULL == u->parent_)
+    tree->root_ = v;
+  else if (u == u->parent_->left_)
+    u->parent_->left_ = v;
+  else 
+    u->parent_->right_ = v;
+  if (NULL != v)
+    v->parent_ = u->parent_;
+}
+
+static Node* delete_node_(AVL* tree, Node* del_node) {
+  Node* unbalanced_node = NULL;
+
+  --tree->num_node_;
+
+  if (NULL == del_node->left_) {
+    unbalanced_node = del_node->parent_;
+    transplant_(tree, del_node, del_node->right_);
+    free(del_node);
+    return unbalanced_node;
+  }
+
+  if (NULL == del_node->right_) {
+    unbalanced_node = del_node->parent_;
+    transplant_(tree, del_node, del_node->left_);
+    free(del_node);
+    return unbalanced_node;
+  }
+
+  Node* rotate_node = get_min(del_node->right_);
+  unbalanced_node = rotate_node;
+
+  if (rotate_node->parent_ != del_node) {
+    unbalanced_node = rotate_node->parent_;
+    transplant_(tree, rotate_node, rotate_node->right_);
+    rotate_node->right_ = del_node->right_;
+    rotate_node->right_->parent_ = rotate_node;
+  }
+
+  transplant_(tree, del_node, rotate_node);
+  rotate_node->left_ = del_node->left_;
+  rotate_node->left_->parent_ = rotate_node;
+  free(del_node);
+
+  return unbalanced_node;
+}
+
+static Node* rebalance_up_(Node* unbalanced_node) {
+  Node* prev_node = unbalanced_node;
+  bool left_child = false;
+  int node_balance;
+
+  for (;;) {
+    prev_node = unbalanced_node->parent_;
+    if (prev_node) left_child = (prev_node->left_ == unbalanced_node);
+
+    unbalanced_node->height_ = get_recalc_height_(unbalanced_node);
+    node_balance = get_balance_(unbalanced_node);
+
+    unbalanced_node = process_delete_rotation_(unbalanced_node, node_balance);
+    unbalanced_node->parent_ = prev_node;
+
+    if (!prev_node) return unbalanced_node;
+
+    if (left_child) prev_node->left_  = unbalanced_node;
+    else            prev_node->right_ = unbalanced_node;
+
+    unbalanced_node = prev_node;
+  }
+}
+
+static Node* delete_key_(AVL* tree, Node* del_node) {
+  Node* unbalanced_node;
+
+  if (NULL == del_node) 
+    return NULL;
+
+  unbalanced_node = delete_node_(tree, del_node);
+
+  if (NULL == unbalanced_node) 
+    return tree->root_;
+
+  return (tree->root_ = rebalance_up_(unbalanced_node));
 }
 
 /* USER METHODS ========================================================== */
@@ -297,6 +422,24 @@ Node* insert_key(AVL* tree, int key)
 {
   if (NULL == tree) return NULL;
   return (tree->root_ = insert_key_(tree->root_, key, &tree->num_node_));
+}
+
+Node* find_key(AVL* tree, int key) 
+{
+  if (NULL == tree) return NULL;
+  Node* walk_node = tree->root_;
+  while (NULL != walk_node && key != walk_node->key_) {
+    walk_node = (key < walk_node->key_)
+              ? walk_node->left_
+              : walk_node->right_
+              ;
+  }
+  return walk_node;
+}
+
+Node* delete_key(AVL* tree, int key) {
+  if (NULL == tree) return NULL;
+  return (tree->root_ = delete_key_(tree, find_key(tree, key)));
 }
 
 Node* create_avl_from_array(AVL* tree, int arr[], u32 size) 
@@ -347,6 +490,7 @@ bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
   return predmod.cd.equals;
 }
 
+/*
 bool is_avl_valid(AVL* tree) {
   predmodule predmod; 
   bool res;
@@ -365,6 +509,7 @@ bool is_avl_valid(AVL* tree) {
 
   return res;
 }
+*/
 
 u32 get_avl_num_elems(AVL* tree) 
 {
@@ -387,6 +532,20 @@ void delete_avl(AVL* tree)
   traverse_postorder_(tree->root_, free_node_);
   tree->root_     = NULL;
   tree->num_node_ = 0;
+}
+
+Node* get_min(Node* node) {
+  if (node == NULL) return NULL;
+  while (node->left_ != NULL) 
+    node = node->left_;
+  return node;
+}
+
+Node* get_max(Node* node) {
+  if (node == NULL) return NULL;
+  while (node->right_ != NULL)
+    node = node->right_;
+  return node;
 }
 
 u32 get_avl_size(AVL* tree) 

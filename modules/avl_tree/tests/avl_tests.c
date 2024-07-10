@@ -68,3 +68,4 @@ Test(avl_tests, insertion3) {
       "Wrong tree state after deletion.");
 }
 
+

@@ -35,6 +35,12 @@ typedef struct cmp_data {
   bool equals;
 } cmp_data;
 
+typedef struct avl_data {
+  bool valid;
+  u32 nodes;
+  u32 elems;
+} avl_data;
+
 typedef struct predicate_module {
   predstate state;   
   predfunc* pred;
@@ -44,11 +50,6 @@ typedef struct predicate_module {
   avl_data* ad;
 } predicate_module;
 
-typedef struct avl_data {
-  bool valid;
-  u32 nodes;
-  u32 elems;
-} avl_data;
 
 void init_predmod(predmodule*, predstate);
 void set_predicate(predmodule*, void*);

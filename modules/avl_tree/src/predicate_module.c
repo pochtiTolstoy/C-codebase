@@ -34,7 +34,7 @@ void set_storage(predmodule* predmod, void* begin, void* end) {
   predmod->sd.storage_end = end;
 }
 
-void free_avl_data(predmodule* premod) {
+void free_avl_data(predmodule* predmod) {
   predmod->ad = (avl_data*) malloc(sizeof(avl_data));
   predmod->ad->valid = true;
   predmod->ad->nodes = 0;

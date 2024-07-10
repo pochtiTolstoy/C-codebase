@@ -1,6 +1,5 @@
 #include "../include/util.h"
 
-
 void merge(int arr[], u32 l, u32 m, u32 r, int* temp) {
   u32 i = l;
   u32 j = m + 1;

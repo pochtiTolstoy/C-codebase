@@ -32,12 +32,16 @@ struct avl_tree {
 
 void  init_avl(AVL*);
 Node* insert_key(AVL*, int);
+Node* delete_key(AVL*, int);
+Node* find_key(AVL*, int);
 void delete_avl(AVL*);
+Node* get_min(Node*);
+Node* get_max(Node*);
 
 Node* create_avl_from_array(AVL*, int [], u32);
 int*  create_arr_from_avl(AVL*);
 bool cmp_avl_with_arr(AVL*, int[], u32);
-bool is_avl_valid(AVL*);
+//bool is_avl_valid(AVL*);
 
 u32 get_height(const Node*);
 
