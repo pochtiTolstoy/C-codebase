@@ -22,7 +22,8 @@ static void check_null_node_(const Node* node)
   }
 }
 
-static bool check_number_(int num, const char* token) {
+static bool check_number_(int num, const char* token) 
+{
   if (num == 0 && token[0] != '0') {
     fprintf(stderr, "Error converting string to numeric array.\n");
     return false;
@@ -30,7 +31,8 @@ static bool check_number_(int num, const char* token) {
   return true;
 }
 
-static bool check_size_arr(u32 size) {
+static bool check_size_arr(u32 size) 
+{
   if (size == 0) {
     fprintf(stderr, "Empty string. Can't convert to numeric array.\n");
     return false;
@@ -42,6 +44,42 @@ static void free_node_(Node* node)
 {
   if (NULL == node)  return;
   free(node);
+}
+
+static bool cmp_avl_(Node* n1, Node* n2) 
+{
+  if (NULL == n1 && NULL == n2)
+    return true;
+  if (NULL == n1 || NULL == n2)
+    return false;
+  if (n1->key_ != n2->key_ || n1->num_key_ != n2->num_key_)
+    return false;
+
+  return cmp_avl_(n1->left_,  n2->left_ ) 
+      && cmp_avl_(n1->right_, n2->right_)
+      ;
+}
+
+static int get_balance_(const Node* node) 
+{
+  check_null_node_(node);
+  return (get_height(node->left_) - get_height(node->right_));
+}
+
+
+static bool is_balanced_(Node* node) 
+{
+  int balance;
+
+  if (NULL == node) return true;
+
+  balance = get_balance_(node);
+  if (balance < -1 || 1 < balance) 
+    return false;
+
+  return is_balanced_(node->left_ ) 
+      && is_balanced_(node->right_)
+      ;
 }
 
 /* traversing mechanism, should be used from wrappers */
@@ -99,12 +137,6 @@ static void cmp_keys_(Node* node, predmodule* predmod)
       return;
     }
   }
-}
-
-static int get_balance_(const Node* node) 
-{
-  check_null_node_(node);
-  return (get_height(node->left_) - get_height(node->right_));
 }
 
 static u32 get_recalc_height_(const Node* node) 
@@ -187,6 +219,8 @@ static Node* create_node_(int key)
 
 static Node* process_insert_rotation_(Node* node, int node_balance, int key) 
 {
+#if AUTO_BALANCE_
+
 #define MAX_BALANCE_TRESHOLD 1
 #define MIN_BALANCE_TRESHOLD -1
 
@@ -246,6 +280,44 @@ static Node* process_insert_rotation_(Node* node, int node_balance, int key)
                                  or will be null if caller is root */
   }
 
+#endif
+
+  return node;
+}
+
+static Node* process_delete_rotation_(Node* node, int node_balance) 
+{
+#if AUTO_BALANCE_
+
+#define MAX_BALANCE_TRESHOLD 1
+#define MIN_BALANCE_TRESHOLD -1
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && get_balance_(node->left_) >= 0)
+    return right_rotate_(node);
+
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && get_balance_(node->right_) <= 0)
+    return left_rotate_(node);
+
+  if (node_balance > MAX_BALANCE_TRESHOLD 
+      && node->left_ != NULL
+      && get_balance_(node->left_) < 0) {
+    node->left_ = left_rotate_(node->left_);
+    node->left_->parent_ = node;
+    return right_rotate_(node);
+  }
+
+  if (node_balance < MIN_BALANCE_TRESHOLD 
+      && node->right_ != NULL
+      && get_balance_(node->right_) > 0) {
+    node->right_ = right_rotate_(node->right_);
+    node->right_->parent_ = node;
+    return left_rotate_(node);
+  }
+
+#endif
   return node;
 }
 
@@ -307,40 +379,8 @@ static Node* insert_key_(Node* node, int key, u32* num_node)
   return process_insert_rotation_(node, node_balance, key);
 }
 
-
-static Node* process_delete_rotation_(Node* node, int node_balance) {
-#define MAX_BALANCE_TRESHOLD 1
-#define MIN_BALANCE_TRESHOLD -1
-  if (node_balance > MAX_BALANCE_TRESHOLD 
-      && node->left_ != NULL
-      && get_balance_(node->left_) >= 0)
-    return right_rotate_(node);
-
-  if (node_balance < MIN_BALANCE_TRESHOLD 
-      && node->right_ != NULL
-      && get_balance_(node->right_) <= 0)
-    return left_rotate_(node);
-
-  if (node_balance > MAX_BALANCE_TRESHOLD 
-      && node->left_ != NULL
-      && get_balance_(node->left_) < 0) {
-    node->left_ = left_rotate_(node->left_);
-    node->left_->parent_ = node;
-    return right_rotate_(node);
-  }
-
-  if (node_balance < MIN_BALANCE_TRESHOLD 
-      && node->right_ != NULL
-      && get_balance_(node->right_) > 0) {
-    node->right_ = right_rotate_(node->right_);
-    node->right_->parent_ = node;
-    return left_rotate_(node);
-  }
-
-  return node;
-}
-
-static void transplant_(AVL* tree, Node* u, Node* v) {
+static void transplant_(AVL* tree, Node* u, Node* v) 
+{
   if (NULL == u->parent_)
     tree->root_ = v;
   else if (u == u->parent_->left_)
@@ -351,7 +391,8 @@ static void transplant_(AVL* tree, Node* u, Node* v) {
     v->parent_ = u->parent_;
 }
 
-static Node* delete_node_(AVL* tree, Node* del_node) {
+static Node* delete_node_(AVL* tree, Node* del_node) 
+{
   Node* unbalanced_node = NULL;
 
   --tree->num_node_;
@@ -388,7 +429,8 @@ static Node* delete_node_(AVL* tree, Node* del_node) {
   return unbalanced_node;
 }
 
-static Node* rebalance_up_(Node* unbalanced_node) {
+static Node* rebalance_up_(Node* unbalanced_node) 
+{
   Node* prev_node = unbalanced_node;
   bool left_child = false;
   int node_balance;
@@ -412,7 +454,8 @@ static Node* rebalance_up_(Node* unbalanced_node) {
   }
 }
 
-static Node* delete_key_(AVL* tree, Node* del_node) {
+static Node* delete_key_(AVL* tree, Node* del_node) 
+{
   Node* unbalanced_node;
 
   if (NULL == del_node) 
@@ -453,7 +496,8 @@ Node* find_key(AVL* tree, int key)
   return walk_node;
 }
 
-Node* delete_key(AVL* tree, int key) {
+Node* delete_key(AVL* tree, int key) 
+{
   if (NULL == tree) return NULL;
 
   Node* found_node = find_key(tree, key);
@@ -502,7 +546,18 @@ int* create_arr_from_avl(AVL* tree)
   return arr; /* should be deallocated */
 }
 
-bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
+bool cmp_avl(AVL* t1, AVL* t2) 
+{
+  if (NULL == t1 && NULL == t2) 
+    return true;
+  if (NULL == t1 || NULL == t2)
+    return false;
+
+  return cmp_avl_(t1->root_, t2->root_);
+}
+
+bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) 
+{
   predmodule predmod;
 
   if (NULL == tree || size == 0) return false;
@@ -516,7 +571,8 @@ bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
   return predmod.cd.equals;
 }
 
-bool cmp_avl_with_string(AVL* tree, const char* source) {
+bool cmp_avl_with_string(AVL* tree, const char* source) 
+{
   char* token;
   int* arr = NULL;
   u32 size = 0;
@@ -558,6 +614,12 @@ bool cmp_avl_with_string(AVL* tree, const char* source) {
   free(str);
 
   return res;
+}
+
+bool is_balanced(AVL* tree) 
+{
+  if (tree == NULL) return true;
+  return is_balanced_(tree->root_);
 }
 
 /*
@@ -604,14 +666,16 @@ void delete_avl(AVL* tree)
   tree->num_node_ = 0;
 }
 
-Node* get_min(Node* node) {
+Node* get_min(Node* node) 
+{
   if (node == NULL) return NULL;
   while (node->left_ != NULL) 
     node = node->left_;
   return node;
 }
 
-Node* get_max(Node* node) {
+Node* get_max(Node* node) 
+{
   if (node == NULL) return NULL;
   while (node->right_ != NULL)
     node = node->right_;

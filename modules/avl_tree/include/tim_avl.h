@@ -9,9 +9,8 @@
 
 #include "predicate_module.h"
 
-/* TODO: delete_key, find_key, get_min, get_max 
- *       upper_bound, lower_bound, size 
- */
+/* 0 - to turn off auto balance */
+#define AUTO_BALANCE_ 1
 
 typedef unsigned int u32;
 typedef struct Node Node;
@@ -41,8 +40,10 @@ Node* get_max(Node*);
 
 Node* create_avl_from_array(AVL*, int [], u32);
 int*  create_arr_from_avl(AVL*);
+bool cmp_avl(AVL*, AVL*);
 bool cmp_avl_with_arr(AVL*, int[], u32);
 bool cmp_avl_with_string(AVL*, const char*);
+bool is_balanced(AVL*);
 //bool is_avl_valid(AVL*);
 
 u32 get_height(const Node*);

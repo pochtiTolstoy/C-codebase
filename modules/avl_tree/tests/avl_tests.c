@@ -2,6 +2,29 @@
 #include "../include/tim_avl.h"
 #include "../include/util.h"
 
+#if AUTO_BALANCE_
+#else
+/* without autobalance tree should be a bamboo after inserting sorted order */
+Test(avl_tests, bamboo1) {
+  AVL tree;
+  init_avl(&tree);
+  for (int i = 0; i < 10; ++i) {
+    insert_key(&tree, i);
+  }
+  cr_assert(tree.root_->key_ == 0, "Wrong tree root.");
+  cr_assert(tree.root_->left_ == NULL, "Tree should be bamboo.");
+  cr_assert(
+    true == cmp_avl_with_string(
+      &tree, 
+      "0 1 2 3 4 5 6 7 8 9"
+    ),
+    "Invalid key sequence."
+  );
+
+  delete_avl(&tree);
+}
+#endif
+
 Test(avl_tests, insertion1) {
   /* LL, LR */
   AVL tree;
@@ -18,6 +41,7 @@ Test(avl_tests, insertion1) {
   sort(in, size);
   cr_assert(cmp_avl_with_arr(&tree, in, size), 
       "Tree is not equal to original array.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_avl(&tree);
   cr_assert(!tree.root_ && tree.num_node_ == 0, 
@@ -41,6 +65,8 @@ Test(avl_tests, insertion2) {
   cr_assert(cmp_avl_with_arr(&tree, in, size), 
       "Tree is not equal to original array.");
 
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
   delete_avl(&tree);
   cr_assert(!tree.root_ && tree.num_node_ == 0, 
       "Wrong tree state after deletion.");
@@ -58,9 +84,10 @@ Test(avl_tests, insertion3) {
   cr_assert(tree.root_, "Tree is not a NULL.");
   cr_assert(!is_avl_empty(&tree), "AVL should not be empty.");
   cr_assert(get_avl_num_elems(&tree) == size, "Wrong elems number.");
-  //print_array(in, size);
   cr_assert(cmp_avl_with_arr(&tree, in, size), 
       "Tree is not equal to original array.");
+
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
 
   delete_avl(&tree);
@@ -87,38 +114,48 @@ Test(avl_tests, deletion1) {
 
   cr_assert(cmp_avl_with_string(&tree, "0 1 2 3 4 5 6 7 8 9") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_key(&tree, 1);
 
   cr_assert(cmp_avl_with_string(&tree, "0 2 3 4 5 6 7 8 9") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_key(&tree, 9);
 
   cr_assert(cmp_avl_with_string(&tree, "0 2 3 4 5 6 7 8") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
   delete_key(&tree, 0);
 
   cr_assert(cmp_avl_with_string(&tree, "2 3 4 5 6 7 8") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_key(&tree, 5);
 
   cr_assert(cmp_avl_with_string(&tree, "2 3 4 6 7 8") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_key(&tree, 7);
 
   cr_assert(cmp_avl_with_string(&tree, "2 3 4 6 8") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   insert_key(&tree, 100);
   cr_assert(cmp_avl_with_string(&tree, "2 3 4 6 8 100") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_key(&tree, 100);
 
   delete_key(&tree, 2);
+
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   cr_assert(cmp_avl_with_string(&tree, "3 4 6 8") == true,
       "Invalid key sequence.");
@@ -137,6 +174,7 @@ Test(avl_tests, deletion1) {
 
   cr_assert(cmp_avl_with_string(&tree, "3") == true,
       "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_avl(&tree);
   cr_assert(!tree.root_ && tree.num_node_ == 0, 
@@ -154,6 +192,7 @@ Test(avl_tests, deletion_LL1) {
   insert_key(&tree, 5);
   insert_key(&tree, 15);
   insert_key(&tree, 1);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   cr_assert(cmp_avl_with_string(&tree, "1 5 10 15 20 23 25") == true,
       "Invalid key sequence.");
@@ -163,11 +202,168 @@ Test(avl_tests, deletion_LL1) {
       "Invalid key sequence.");
 
   cr_assert(tree.root_->key_ == 10, "Wrong root node.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   delete_avl(&tree);
   cr_assert(!tree.root_ && tree.num_node_ == 0, 
       "Wrong tree state after deletion.");
 }
+
+Test(avl_tests, deleteion_RR1) {
+  AVL tree;
+  init_avl(&tree);
+  insert_key(&tree, 20);
+  insert_key(&tree, 10);
+  insert_key(&tree, 30);
+  insert_key(&tree, 5);
+  insert_key(&tree, 25);
+  insert_key(&tree, 35);
+  insert_key(&tree, 40);
+
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+  
+  cr_assert(cmp_avl_with_string(&tree, "5 10 20 25 30 35 40") == true,
+      "Invalid key sequence.");
+
+  delete_key(&tree, 5); 
+  cr_assert(tree.root_->key_ == 30, "Wrong tree root");
+  cr_assert(cmp_avl_with_string(&tree, "10 20 25 30 35 40") == true,
+      "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
+Test(avl_test, deletion_RL1) {
+  AVL tree;
+  init_avl(&tree);
+  insert_key(&tree, 20);
+  insert_key(&tree, 10);
+  insert_key(&tree, 30);
+  insert_key(&tree, 5);
+  insert_key(&tree, 25);
+  insert_key(&tree, 35);
+  insert_key(&tree, 23);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+  
+  cr_assert(cmp_avl_with_string(&tree, "5 10 20 23 25 30 35") == true,
+      "Invalid key sequence.");
+
+  delete_key(&tree, 5); 
+  cr_assert(tree.root_->key_ == 25, "Wrong tree root");
+  cr_assert(cmp_avl_with_string(&tree, "10 20 23 25 30 35") == true,
+      "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
+Test(avl_test, deletion_LR1) {
+  AVL tree;
+  init_avl(&tree);
+  insert_key(&tree, 25);
+  insert_key(&tree, 15);
+  insert_key(&tree, 30);
+  insert_key(&tree, 5);
+  insert_key(&tree, 20);
+  insert_key(&tree, 35);
+  insert_key(&tree, 23);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+  
+  cr_assert(cmp_avl_with_string(&tree, "5 15 20 23 25 30 35") == true,
+      "Invalid key sequence.");
+
+  delete_key(&tree, 35); 
+  cr_assert(tree.root_->key_ == 20, "Wrong tree root");
+  cr_assert(cmp_avl_with_string(&tree, "5 15 20 23 25 30") == true,
+      "Invalid key sequence.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
+Test(avl_test, deletion_RL2) {
+  AVL tree;
+  AVL test_tree;
+  init_avl(&tree);
+  init_avl(&test_tree);
+
+  insert_key(&tree, 20);
+  insert_key(&tree, 10);
+  insert_key(&tree, 35);
+  insert_key(&tree, 5);
+  insert_key(&tree, 15);
+  insert_key(&tree, 25);
+  insert_key(&tree, 40);
+  insert_key(&tree, 1);
+  insert_key(&tree, 24);
+  insert_key(&tree, 30);
+  insert_key(&tree, 45);
+  insert_key(&tree, 33);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+  
+  cr_assert(
+      true == cmp_avl_with_string(
+        &tree, 
+        "1 5 10 15 20 24 25 30 33 35 40 45"
+      ),
+      "Invalid key sequence."
+  );
+
+  delete_key(&tree, 1); 
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+  cr_assert(tree.root_->key_ == 25, "Wrong tree root");
+  cr_assert(
+      true == cmp_avl_with_string(
+        &tree, 
+        "5 10 15 20 24 25 30 33 35 40 45"
+      ),
+      "Invalid key sequence."
+  );
+
+  /* creating correct tree structure */
+  insert_key(&test_tree, 25);
+
+  insert_key(&test_tree, 20);
+  insert_key(&test_tree, 35);
+
+  insert_key(&test_tree, 10);
+  insert_key(&test_tree, 24);
+  insert_key(&test_tree, 30);
+  insert_key(&test_tree, 40);
+  
+  insert_key(&test_tree, 5);
+  insert_key(&test_tree, 15);
+  insert_key(&test_tree, 33);
+  insert_key(&test_tree, 45);
+
+  cr_assert(
+      cmp_avl(&tree, &test_tree) == true, 
+      "Tree structures are different."
+  );
+
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced");
+
+  delete_avl(&tree);
+  delete_avl(&test_tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
 
 Test(avl_tests, key_repeat1) {
   AVL tree;
@@ -176,6 +372,7 @@ Test(avl_tests, key_repeat1) {
   for (u32 i = 0; i < 5; ++i) {
     insert_key(&tree, 10);
   }
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   cr_assert(cmp_avl_with_string(&tree, "10 10 10 10 10"), 
       "Invalid key sequence");
@@ -186,6 +383,7 @@ Test(avl_tests, key_repeat1) {
   for (u32 i = 0; i < 4; ++i) {
     insert_key(&tree, 20);
   }
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
   cr_assert(cmp_avl_with_string(&tree, "10 10 10 10 10 20 20 20 20"), 
       "Invalid key sequence");
@@ -211,12 +409,56 @@ Test(avl_tests, key_repeat1) {
 
   for (u32 i = 0; i < 3; ++i)
     delete_key(&tree, 20);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
 
 
   cr_assert(cmp_avl_with_string(&tree, "20"), 
       "Invalid key sequence");
   cr_assert(get_avl_size(&tree) == 1, "Wrong node counter.");
   cr_assert(get_avl_num_elems(&tree) == 1, "Wrong key counter.");
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
+Test(avl_test, key_repeat2) {
+  AVL tree;
+  init_avl(&tree);
+
+  for (u32 i = 0; i < 5; ++i) {
+    insert_key(&tree, i);
+  }
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  cr_assert(cmp_avl_with_string(&tree, "0 1 2 3 4"), 
+      "Invalid key sequence");
+
+  for (u32 i = 0; i < 5; ++i) {
+    insert_key(&tree, i);
+  }
+
+  cr_assert(cmp_avl_with_string(&tree, "0 0 1 1 2 2 3 3 4 4"), 
+      "Invalid key sequence");
+  
+  delete_key(&tree, 2);
+  delete_key(&tree, 4);
+  delete_key(&tree, 0);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  cr_assert(cmp_avl_with_string(&tree, "0 1 1 2 3 3 4"), 
+      "Invalid key sequence");
+
+  delete_key(&tree, 0);
+  delete_key(&tree, 3);
+  delete_key(&tree, 3);
+  cr_assert(is_balanced(&tree) == true, "Tree is not balanced.");
+
+  cr_assert(cmp_avl_with_string(&tree, "1 1 2 4"), 
+      "Invalid key sequence");
 
   delete_avl(&tree);
   cr_assert(!tree.root_ && tree.num_node_ == 0, 
