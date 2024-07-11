@@ -21,7 +21,6 @@ static void traverse_postorder_(Node* node, void (*predicate)(Node*)) {
   (*predicate)(node);
 }
 
-// unsafe
 static void transplant_(BST* tree, Node* u, Node* v) {
   if (u->parent_ == NULL)
     tree->root_ = v;
