@@ -97,7 +97,6 @@ Test(avl_tests, deletion1) {
 
   cr_assert(cmp_avl_with_string(&tree, "0 2 3 4 5 6 7 8") == true,
       "Invalid key sequence.");
-
   delete_key(&tree, 0);
 
   cr_assert(cmp_avl_with_string(&tree, "2 3 4 5 6 7 8") == true,
@@ -145,3 +144,83 @@ Test(avl_tests, deletion1) {
 }
 
 
+Test(avl_tests, deletion_LL1) {
+  AVL tree;
+  init_avl(&tree);
+  insert_key(&tree, 20);
+  insert_key(&tree, 25);
+  insert_key(&tree, 10);
+  insert_key(&tree, 23);
+  insert_key(&tree, 5);
+  insert_key(&tree, 15);
+  insert_key(&tree, 1);
+
+  cr_assert(cmp_avl_with_string(&tree, "1 5 10 15 20 23 25") == true,
+      "Invalid key sequence.");
+
+  delete_key(&tree, 23);
+  cr_assert(cmp_avl_with_string(&tree, "1 5 10 15 20 25") == true,
+      "Invalid key sequence.");
+
+  cr_assert(tree.root_->key_ == 10, "Wrong root node.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+}
+
+Test(avl_tests, key_repeat1) {
+  AVL tree;
+  init_avl(&tree);
+
+  for (u32 i = 0; i < 5; ++i) {
+    insert_key(&tree, 10);
+  }
+
+  cr_assert(cmp_avl_with_string(&tree, "10 10 10 10 10"), 
+      "Invalid key sequence");
+
+  cr_assert(get_avl_size(&tree) == 1, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 5, "Wrong key counter.");
+
+  for (u32 i = 0; i < 4; ++i) {
+    insert_key(&tree, 20);
+  }
+
+  cr_assert(cmp_avl_with_string(&tree, "10 10 10 10 10 20 20 20 20"), 
+      "Invalid key sequence");
+
+  cr_assert(get_avl_size(&tree) == 2, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 9, "Wrong key counter.");
+
+  delete_key(&tree, 10);
+
+  cr_assert(cmp_avl_with_string(&tree, "10 10 10 10 20 20 20 20"), 
+      "Invalid key sequence");
+  cr_assert(get_avl_size(&tree) == 2, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 8, "Wrong key counter.");
+
+  /* should be ok too */
+  for (u32 i = 0; i < 20; ++i)
+    delete_key(&tree, 10);
+
+  cr_assert(cmp_avl_with_string(&tree, "20 20 20 20"), 
+      "Invalid key sequence");
+  cr_assert(get_avl_size(&tree) == 1, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 4, "Wrong key counter.");
+
+  for (u32 i = 0; i < 3; ++i)
+    delete_key(&tree, 20);
+
+
+  cr_assert(cmp_avl_with_string(&tree, "20"), 
+      "Invalid key sequence");
+  cr_assert(get_avl_size(&tree) == 1, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 1, "Wrong key counter.");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}

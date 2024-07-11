@@ -455,7 +455,17 @@ Node* find_key(AVL* tree, int key)
 
 Node* delete_key(AVL* tree, int key) {
   if (NULL == tree) return NULL;
-  return (tree->root_ = delete_key_(tree, find_key(tree, key)));
+
+  Node* found_node = find_key(tree, key);
+  if (NULL == found_node) return tree->root_;
+
+  assert(found_node->num_key_ >= 1);
+  if (found_node->num_key_ > 1) {
+    --found_node->num_key_; 
+    return tree->root_;
+  }
+
+  return (tree->root_ = delete_key_(tree, found_node));
 }
 
 Node* create_avl_from_array(AVL* tree, int arr[], u32 size) 
@@ -506,7 +516,6 @@ bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
   return predmod.cd.equals;
 }
 
-//// BAAAAAAAAAAAAAAD, rewrite!
 bool cmp_avl_with_string(AVL* tree, const char* source) {
   char* token;
   int* arr = NULL;
@@ -532,11 +541,11 @@ bool cmp_avl_with_string(AVL* tree, const char* source) {
 
   if (!check_size_arr(size)) return false;
 
-  /* fill array */
   arr = (int*) malloc(sizeof(int) * size);
   memcpy(str, source, strlen(source) + 1);
   str[strlen(source)] = '\0';
 
+  /* fill array */
   token = strtok(str, " ,");
   for (u32 i = 0; i < size; ++i, token = strtok(NULL, " ,"))
     arr[i] = atoi(token);
