@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -41,6 +42,7 @@ Node* get_max(Node*);
 Node* create_avl_from_array(AVL*, int [], u32);
 int*  create_arr_from_avl(AVL*);
 bool cmp_avl_with_arr(AVL*, int[], u32);
+bool cmp_avl_with_string(AVL*, const char*);
 //bool is_avl_valid(AVL*);
 
 u32 get_height(const Node*);

@@ -22,6 +22,22 @@ static void check_null_node_(const Node* node)
   }
 }
 
+static bool check_number_(int num, const char* token) {
+  if (num == 0 && token[0] != '0') {
+    fprintf(stderr, "Error converting string to numeric array.\n");
+    return false;
+  }
+  return true;
+}
+
+static bool check_size_arr(u32 size) {
+  if (size == 0) {
+    fprintf(stderr, "Empty string. Can't convert to numeric array.\n");
+    return false;
+  }
+  return true;
+}
+
 static void free_node_(Node* node) 
 {
   if (NULL == node)  return;
@@ -488,6 +504,51 @@ bool cmp_avl_with_arr(AVL* tree, int* arr, u32 size) {
   traverse_inorder_(tree->root_, &predmod);
 
   return predmod.cd.equals;
+}
+
+//// BAAAAAAAAAAAAAAD, rewrite!
+bool cmp_avl_with_string(AVL* tree, const char* source) {
+  char* token;
+  int* arr = NULL;
+  u32 size = 0;
+  int num = 0;
+  bool res;
+  char* str;
+  
+
+  /* copy string */
+  str = (char*) malloc(sizeof(char) * (strlen(source) + 1));
+  memcpy(str, source, strlen(source) + 1);
+  str[strlen(source)] = '\0';
+
+  /* count elements in string and check correctness */
+  token = strtok(str, " ,");
+  while (NULL != token) {
+    num = atoi(token);
+    if (!check_number_(num, token)) return false;
+    token = strtok(NULL, " ,");
+    ++size; 
+  }
+
+  if (!check_size_arr(size)) return false;
+
+  /* fill array */
+  arr = (int*) malloc(sizeof(int) * size);
+  memcpy(str, source, strlen(source) + 1);
+  str[strlen(source)] = '\0';
+
+  token = strtok(str, " ,");
+  for (u32 i = 0; i < size; ++i, token = strtok(NULL, " ,"))
+    arr[i] = atoi(token);
+
+
+  /* compare array with tree */
+  res = cmp_avl_with_arr(tree, arr, size);
+
+  free(arr);
+  free(str);
+
+  return res;
 }
 
 /*
