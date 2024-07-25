@@ -682,6 +682,32 @@ Node* get_max(Node* node)
   return node;
 }
 
+Node* lower_bound(Node* node) 
+{
+  if (NULL == node) return NULL;
+  if (NULL != node->left_)
+    return get_max(node->left_);
+  Node* prev_node = node->parent_;
+  while (prev_node != NULL && node == prev_node->left_) {
+    node = prev_node;
+    prev_node = prev_node->parent_;
+  }
+  return prev_node;
+}
+
+Node* upper_bound(Node* node) 
+{
+  if (NULL == node) return NULL;
+  if (NULL != node->right_)
+    return get_min(node->right_);
+  Node* prev_node = node->parent_;
+  while (prev_node != NULL && node == prev_node->right_) {
+    node = prev_node;
+    prev_node = prev_node->parent_;
+  }
+  return prev_node;
+}
+
 u32 get_avl_size(AVL* tree) 
 {
   if (NULL == tree) return 0;

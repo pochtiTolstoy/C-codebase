@@ -466,3 +466,67 @@ Test(avl_test, key_repeat2) {
   cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
   cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
 }
+
+Test(avl_test, lower_bound1) {
+  AVL tree;
+  init_avl(&tree);
+
+  int arr[] = { 30, 10, 50, 5, 20, 40, 15, 25 };
+  const u32 size = sizeof(arr) / sizeof(arr[0]);
+  create_avl_from_array(&tree, arr, size);
+  cr_assert(lower_bound(find_key(&tree, 30))->key_ == 25, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 15))->key_ == 10, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 5)) == NULL, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 10))->key_ == 5, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 25))->key_ == 20, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 20))->key_ == 15, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 40))->key_ == 30, 
+      "Wrong lower bound value");
+  cr_assert(lower_bound(find_key(&tree, 50))->key_ == 40, 
+      "Wrong lower bound value");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+
+
+Test(avl_test, upper_bound1) {
+  AVL tree;
+  init_avl(&tree);
+
+  int arr[] = { 30, 10, 50, 5, 20, 40, 15, 25 };
+  const u32 size = sizeof(arr) / sizeof(arr[0]);
+  create_avl_from_array(&tree, arr, size);
+  cr_assert(upper_bound(find_key(&tree, 5))->key_ == 10, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 10))->key_ == 15, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 15))->key_ == 20, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 25))->key_ == 30, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 20))->key_ == 25, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 40))->key_ == 50, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 30))->key_ == 40, 
+      "Wrong upper bound value");
+  cr_assert(upper_bound(find_key(&tree, 50)) == NULL, 
+      "Wrong upper bound value");
+
+  delete_avl(&tree);
+  cr_assert(!tree.root_ && tree.num_node_ == 0, 
+      "Wrong tree state after deletion.");
+  cr_assert(get_avl_size(&tree) == 0, "Wrong node counter.");
+  cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
+}
+

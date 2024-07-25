@@ -37,6 +37,8 @@ Node* find_key(AVL*, int);
 void delete_avl(AVL*);
 Node* get_min(Node*);
 Node* get_max(Node*);
+Node* lower_bound(Node*);
+Node* upper_bound(Node*);
 
 Node* create_avl_from_array(AVL*, int [], u32);
 int*  create_arr_from_avl(AVL*);
