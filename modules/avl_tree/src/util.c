@@ -44,6 +44,13 @@ void print_array(int arr[], u32 size) {
   putchar('\n');
 }
 
+bool is_array_sorted(int arr[], u32 size) {
+	for (u32 i = 1; i < size; ++i)
+		if (arr[i] < arr[i - 1])
+			return false;
+	return true;
+}
+
 void fill_array_rand(int arr[], u32 size) {
 	for (u32 i = 0; i < size; ++i) 
     arr[i] = rand() % 1000;

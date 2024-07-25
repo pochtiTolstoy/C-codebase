@@ -622,27 +622,6 @@ bool is_balanced(AVL* tree)
   return is_balanced_(tree->root_);
 }
 
-/*
-bool is_avl_valid(AVL* tree) {
-  predmodule predmod; 
-  bool res;
-
-  if (tree == NULL) return false;
-  if (tree->root_ == NULL && tree->num_node_ == 0)
-    return true;
-
-  init_predmod(&predmod, READ);
-  set_predicate(&predmod, );
-  create_avl_data(&predmod);
-  traverse_inorder_(tree->root_, &predmod);
-//===================================================NO COMPILE
-  res = predmod.ad->valid;
-  free_avl_data(&predmod);
-
-  return res;
-}
-*/
-
 u32 get_avl_num_elems(AVL* tree) 
 {
   predmodule predmod;
@@ -706,6 +685,22 @@ Node* upper_bound(Node* node)
     prev_node = prev_node->parent_;
   }
   return prev_node;
+}
+
+void avl_sort(int arr[], u32 size) {
+  AVL tree;
+  predmodule predmod;
+
+  init_avl(&tree);
+  create_avl_from_array(&tree, arr, size);
+
+  init_predmod(&predmod, STORE);
+  set_predicate(&predmod, copy_to_array_);
+  set_storage(&predmod, arr, arr + size);
+
+  traverse_inorder_(tree.root_, &predmod); /* will sort array */
+
+  delete_avl(&tree);
 }
 
 u32 get_avl_size(AVL* tree) 

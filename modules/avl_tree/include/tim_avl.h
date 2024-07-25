@@ -39,6 +39,7 @@ Node* get_min(Node*);
 Node* get_max(Node*);
 Node* lower_bound(Node*);
 Node* upper_bound(Node*);
+void avl_sort(int [], u32);
 
 Node* create_avl_from_array(AVL*, int [], u32);
 int*  create_arr_from_avl(AVL*);
@@ -46,7 +47,6 @@ bool cmp_avl(AVL*, AVL*);
 bool cmp_avl_with_arr(AVL*, int[], u32);
 bool cmp_avl_with_string(AVL*, const char*);
 bool is_balanced(AVL*);
-//bool is_avl_valid(AVL*);
 
 u32 get_height(const Node*);
 

@@ -2,6 +2,8 @@
 #include "../include/tim_avl.h"
 #include "../include/util.h"
 
+extern bool is_array_sorted(int [], u32); /* util.h */
+
 #if AUTO_BALANCE_
 #else
 /* without autobalance tree should be a bamboo after inserting sorted order */
@@ -530,3 +532,21 @@ Test(avl_test, upper_bound1) {
   cr_assert(get_avl_num_elems(&tree) == 0, "Wrong elems counter.");
 }
 
+Test(avl_test, sorting1) {
+  const u32 size = 1000;
+  int arr[size];
+  fill_array_rand(arr, size);
+  avl_sort(arr, size);
+
+  cr_assert(is_array_sorted(arr, size), "Array is not sorted");
+
+  avl_sort(arr, size);
+  cr_assert(is_array_sorted(arr, size), "Incorder array is not sorted");
+
+  const u32 size2 = 1000000;
+  int arr2[size2];
+  fill_array_rand(arr2, size2);
+  avl_sort(arr2, size2);
+  
+  cr_assert(is_array_sorted(arr2, size2), "Large array is not sorted");
+}
