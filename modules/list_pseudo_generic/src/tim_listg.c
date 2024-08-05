@@ -200,6 +200,13 @@ value_list_t pop(List* list)
   return key;
 }
 
+Node* find_node(const List* list, const Node* node) 
+{
+  Node* ptr = list->head_->next_;
 
-
-
+  while (ptr != ptr->next_) {
+    if (ptr == node) return ptr;
+    ptr = ptr->next_;
+  }
+  return NULL;
+}

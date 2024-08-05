@@ -49,4 +49,6 @@ void free_list(List*);
 
 value_list_t pop(List*);
 
+Node* find_node(const List*, const Node*);
+
 #endif /* LIST_GEN_ */
