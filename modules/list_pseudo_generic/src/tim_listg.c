@@ -16,6 +16,31 @@ static void print_string(Node* node) {
   printf("%s ", node->key_.string);  
 }
 
+static void print_pair(Node* node) {
+  Pair* pt = &node->key_.pair;
+  vtype_pair_t* type = &pt->key_type_;
+  value_pair_t* elem = &pt->key;
+  putchar('[');
+  for (int i = 0; i < 2; ++i) {
+    switch (*type) {
+      case PDECIMAL:
+        printf("%ld", (*elem).decimal);
+        break;
+      case PREAL:
+        printf("%f", (*elem).real);
+        break;
+      case PSTRING:
+        printf("%s", (*elem).string);
+        break;
+      default:
+        abort();
+    }
+    (i == 0) ? printf(", ") : printf("], ");
+    type = &pt->value_type_;
+    elem = &pt->value;
+  }
+}
+
 static bool is_list_empty(const List* list) {
   return list->size_ == 0;
 }
@@ -32,7 +57,8 @@ static void check_node_alloc(const Node* node)
 	}
 }
 
-static List* set_key_type_(List* list, const uint8_t* format) 
+
+static List* set_key_type_(List* list, const char* format) 
 {
 	if (NULL == format || NULL == list) 
 		return NULL;
@@ -47,33 +73,115 @@ static List* set_key_type_(List* list, const uint8_t* format)
 		case 's': /* string */
 			list->type_ = STRING_ELEM;  
 			break;
+    case 'p':
+      list->type_ = PAIR_ELEM;
+      break;
 		default: 
 			return NULL;	
 	}
   return list;
 }
 
-static Node* set_default_value_node_(Node* node, vtype_list_t type) 
+static void
+init_pair_union_(value_pair_t* value, vtype_pair_t type) 
+{
+  switch (type) {
+    case PDECIMAL:
+      (*value).decimal = 0;
+      break;
+    case PREAL:
+      (*value).real = 0;
+      break;
+    case PSTRING:
+      (*value).string = NULL;
+      break;
+    default:
+      fprintf(stderr, "Unknown type of pair. Abort.");
+      abort();
+  }
+}
+
+static void
+init_list_union_(value_list_t* value, vtype_list_t type) 
+{
+  switch (type) {
+    case DECIMAL_ELEM:
+      (*value).decimal = 0;
+      break;
+    case REAL_ELEM:
+      (*value).real = 0;
+      break;
+    case STRING_ELEM:
+      (*value).string = NULL;
+      break;
+    default:
+      fprintf(stderr, "Unknown type of list. Abort.");
+      abort();
+  }
+}
+
+static Node* 
+set_default_value_node_(Node* node, vtype_list_t type) 
 {
 	if (NULL == node) return NULL;
-	switch (type) {
-		case DECIMAL_ELEM:
-			node->key_.decimal = 0;
-			break;
-		case REAL_ELEM:
-			node->key_.real = 0.0;
-			break;
-		case STRING_ELEM:
-			node->key_.string = NULL;
-			break;
-		default:
-			fprintf(stderr, "Unknown type of list element.");
-			abort();
-	}
+  switch (type) {
+    case PAIR_ELEM:
+      /*
+      init_pair_union_(&node->key_.pair.key,   node->key_.pair.key_type_);
+      init_pair_union_(&node->key_.pair.value, node->key_.pair.value_type_);
+      */
+      break;
+    default:
+      init_list_union_(&node->key_, type);
+  }
 	return node;
 }
 
-Node* init_list(List* list, const uint8_t* format) 
+static bool 
+compare_decimal(value_list_t* n1, value_list_t* n2) 
+{
+  return ((*n1).decimal == (*n2).decimal);
+}
+
+static bool 
+compare_real(value_list_t* n1, value_list_t* n2) 
+{
+  return ((*n1).real == (*n2).real);
+}
+
+static bool 
+compare_strings(value_list_t* n1, value_list_t* n2) 
+{
+  return (strcmp((*n1).string, (*n2).string) == 0);
+}
+
+static bool
+compare_pair(value_list_t* n1, value_list_t* n2)
+{
+  Pair* p1 = &((*n1).pair);
+  Pair* p2 = &((*n2).pair);
+  if ((*p1).key_type_ != (*p2).key_type_) {
+    fprintf(stderr, "Incomparable types of pairs. Abort.\n");
+    abort();
+  }
+  switch ((*p1).key_type_) {
+    case PDECIMAL:
+      return (p1->key.decimal == p2->key.decimal);
+      break;
+    case PREAL:
+      return (p1->key.real == p2->key.real);
+      break;
+    case PSTRING:
+      return (strcmp(p1->key.string, p2->key.string) == 0);
+      break;
+    default:
+      fprintf(stderr, "Wrong pair type. Abort.\n");
+      abort();
+  }
+  return false;
+}
+
+Node* init_list(List* list, const char* format) 
 {
 	if (NULL == set_key_type_(list, format))
 		return NULL;
@@ -113,10 +221,13 @@ Node* push(List* list, ...)
 			temp->key_.real = va_arg(factor, double);
 			break;
 		case STRING_ELEM:
-			temp->key_.string = va_arg(factor, uint8_t*);
+			temp->key_.string = va_arg(factor, char*);
 			break;
+    case PAIR_ELEM:
+      temp->key_.pair = va_arg(factor, Pair);
+      break;
 		default:
-			fprintf(stderr, "Pushed wrong type in list. Abort.");
+			fprintf(stderr, "Wrong type in list. Abort.");
 			abort();
 	}
   va_end(factor);
@@ -146,6 +257,9 @@ void print_list(const List* list)
       break;
     case STRING_ELEM:
       ptr_print = print_string;
+      break;
+    case PAIR_ELEM:
+      ptr_print = print_pair;
       break;
     default:
       fprintf(stderr, "Wrong list type to print. Abort.");
@@ -209,4 +323,68 @@ Node* find_node(const List* list, const Node* node)
     ptr = ptr->next_;
   }
   return NULL;
+}
+
+Node* find_key(const List* list, ...) {
+  Node* ptr = list->head_->next_;
+  Comparator compare = NULL;
+
+  va_list arg;
+  va_start (arg, list);
+  value_list_t temp;
+
+  switch (list->type_) {
+    case DECIMAL_ELEM: 
+      compare = compare_decimal;
+      temp.decimal = va_arg(arg, int64_t);
+      break;
+    case REAL_ELEM:
+      compare = compare_real;
+      temp.real = va_arg(arg, double);
+      break;
+    case STRING_ELEM:
+      compare = compare_strings;
+      temp.string = va_arg(arg, char*);
+      break;
+    case PAIR_ELEM:
+      compare = compare_pair;
+      temp.pair = va_arg(arg, Pair);
+      break;
+    default:
+      fprintf(stderr, "Wrong list type to compare. Abort.");
+      abort();
+  }
+
+  while (ptr != ptr->next_) {
+    if (compare(&ptr->key_, &temp))
+      return ptr;
+    ptr = ptr->next_;
+  }
+  return NULL;
+}
+
+void init_pair(Pair* pair, const char* format, ...) 
+{
+  va_list factor; 
+  va_start(factor, format);
+  vtype_pair_t* pt = &pair->key_type_;
+  value_pair_t* pv = &pair->key;
+  for (; *format != '\0'; ++format) {
+    switch (*format) {
+      case 'd': case 'i':
+        (*pt) = PDECIMAL;
+        (*pv).decimal = va_arg(factor, int64_t);
+        break;
+      case 'r': case 'f':
+        (*pt) = PREAL;
+        (*pv).real = va_arg(factor, double);
+        break;
+      case 's':
+        (*pt) = PSTRING;
+        (*pv).string = va_arg(factor, char*);
+        break;
+    }
+    pt = &pair->value_type_;
+    pv = &pair->value;
+  }
 }
