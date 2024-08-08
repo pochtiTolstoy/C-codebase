@@ -27,7 +27,7 @@ static void print_pair(Node* node) {
         printf("%ld", (*elem).decimal);
         break;
       case PREAL:
-        printf("%f", (*elem).real);
+        printf("%.2f", (*elem).real);
         break;
       case PSTRING:
         printf("%s", (*elem).string);
@@ -35,7 +35,7 @@ static void print_pair(Node* node) {
       default:
         abort();
     }
-    (i == 0) ? printf(", ") : printf("], ");
+    (i == 0) ? printf(", ") : printf("],\n");
     type = &pt->value_type_;
     elem = &pt->value;
   }
@@ -83,25 +83,6 @@ static List* set_key_type_(List* list, const char* format)
 }
 
 static void
-init_pair_union_(value_pair_t* value, vtype_pair_t type) 
-{
-  switch (type) {
-    case PDECIMAL:
-      (*value).decimal = 0;
-      break;
-    case PREAL:
-      (*value).real = 0;
-      break;
-    case PSTRING:
-      (*value).string = NULL;
-      break;
-    default:
-      fprintf(stderr, "Unknown type of pair. Abort.");
-      abort();
-  }
-}
-
-static void
 init_list_union_(value_list_t* value, vtype_list_t type) 
 {
   switch (type) {
@@ -116,7 +97,6 @@ init_list_union_(value_list_t* value, vtype_list_t type)
       break;
     default:
       fprintf(stderr, "Unknown type of list. Abort.");
-      abort();
   }
 }
 
@@ -326,12 +306,16 @@ Node* find_node(const List* list, const Node* node)
 }
 
 Node* find_key(const List* list, ...) {
+  if (is_list_empty(list)) return NULL;
   Node* ptr = list->head_->next_;
   Comparator compare = NULL;
 
   va_list arg;
   va_start (arg, list);
   value_list_t temp;
+  char key_literal = '0';
+  Pair temp_pair;
+  char flag[2] = "xd";
 
   switch (list->type_) {
     case DECIMAL_ELEM: 
@@ -348,7 +332,36 @@ Node* find_key(const List* list, ...) {
       break;
     case PAIR_ELEM:
       compare = compare_pair;
-      temp.pair = va_arg(arg, Pair);
+      Node* first_node = list->head_->next_;
+      switch (first_node->key_.pair.key_type_) {
+        case PDECIMAL:
+          temp.decimal = va_arg(arg, int64_t);
+          key_literal = 'd';
+          break;
+        case PREAL:
+          temp.real = va_arg(arg, double);
+          key_literal = 'f';
+          break;
+        case PSTRING:
+          temp.string = va_arg(arg, char*);
+          key_literal = 's';
+          break;
+      }
+      flag[0] = key_literal;
+      switch (key_literal) {
+        case 'd':
+          init_pair(&temp_pair, flag, temp.decimal, -1);
+          break;
+        case 'f':
+          init_pair(&temp_pair, flag, temp.real, -1);
+          break;
+        case 's':
+          init_pair(&temp_pair, flag, temp.string, -1);
+          break;
+        default:
+          break;
+      }
+      temp.pair = temp_pair;
       break;
     default:
       fprintf(stderr, "Wrong list type to compare. Abort.");
