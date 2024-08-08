@@ -16,6 +16,10 @@ static void print_string(Node* node) {
   printf("%s ", node->key_.string);  
 }
 
+static void print_void(Node* node) {
+  printf("%p\n", node->key_.void_t);
+}
+
 static void print_pair(Node* node) {
   Pair* pt = &node->key_.pair;
   vtype_pair_t* type = &pt->key_type_;
@@ -76,6 +80,9 @@ static List* set_key_type_(List* list, const char* format)
     case 'p':
       list->type_ = PAIR_ELEM;
       break;
+    case 'v':
+      list->type_ = VOID_ELEM;
+      break;
 		default: 
 			return NULL;	
 	}
@@ -111,6 +118,9 @@ set_default_value_node_(Node* node, vtype_list_t type)
       init_pair_union_(&node->key_.pair.value, node->key_.pair.value_type_);
       */
       break;
+    case VOID_ELEM:
+      node->key_.void_t = NULL;
+      break;
     default:
       init_list_union_(&node->key_, type);
   }
@@ -133,6 +143,11 @@ static bool
 compare_strings(value_list_t* n1, value_list_t* n2) 
 {
   return (strcmp((*n1).string, (*n2).string) == 0);
+}
+
+static bool
+compare_voids(value_list_t* n1, value_list_t* n2) {
+  return ((*n1).void_t == (*n2).void_t);
 }
 
 static bool
@@ -206,6 +221,9 @@ Node* push(List* list, ...)
     case PAIR_ELEM:
       temp->key_.pair = va_arg(factor, Pair);
       break;
+    case VOID_ELEM:
+      temp->key_.void_t = va_arg(factor, void*);
+      break;
 		default:
 			fprintf(stderr, "Wrong type in list. Abort.");
 			abort();
@@ -240,6 +258,10 @@ void print_list(const List* list)
       break;
     case PAIR_ELEM:
       ptr_print = print_pair;
+      break;
+    case VOID_ELEM:
+      printf("print_list can't infer type from void*.\n");
+      ptr_print = print_void;
       break;
     default:
       fprintf(stderr, "Wrong list type to print. Abort.");
@@ -329,6 +351,10 @@ Node* find_key(const List* list, ...) {
     case STRING_ELEM:
       compare = compare_strings;
       temp.string = va_arg(arg, char*);
+      break;
+    case VOID_ELEM:
+      compare = compare_voids;
+      temp.void_t = va_arg(arg, void*);
       break;
     case PAIR_ELEM:
       compare = compare_pair;

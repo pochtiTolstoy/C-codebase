@@ -17,7 +17,8 @@ typedef enum {
 	DECIMAL_ELEM,
 	REAL_ELEM,
 	STRING_ELEM,
-  PAIR_ELEM
+  PAIR_ELEM,
+  VOID_ELEM
 } vtype_list_t;
 
 typedef enum {
@@ -44,6 +45,7 @@ typedef union {
 	double  real;
 	char*   string;
   Pair    pair;
+  void*   void_t;
 } value_list_t;
 
 typedef struct Node {

@@ -104,5 +104,37 @@ int main(void) {
   print_list(&list_pair2);
 
   free_list(&list_pair2);
+
+// CUSTOM DATA TYPE ==========================================
+  
+  typedef struct Car {
+    int price;
+    double speed;
+    char name[65];
+  } Car;
+
+  Car car1 = { 100, 200.5, "AA" };
+  Car car2 = { 300, 300.55, "BB" };
+  Car car3 = { 500, 320.23, "CC" };
+  
+  List car_list;
+  init_list(&car_list, "v");
+  push(&car_list, (void*)&car1);
+  push(&car_list, (void*)&car2);
+  push(&car_list, (void*)&car3);
+
+  print_list(&car_list);
+
+  if (find_key(&car_list, (void*) &car1)) {
+    Car temp_car = *(Car*)(pop(&car_list).void_t);
+    printf("Temp car. Price: %d, speed: %f, name: %s.\n", 
+        temp_car.price, temp_car.speed, temp_car.name);
+  } else {
+    printf("Car with the same memory address was not found in list.\n");
+  }
+
+  print_list(&car_list);
+
+  free_list(&car_list);
 	return 0;
 }
