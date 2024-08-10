@@ -1,6 +1,5 @@
-obj/*
-tests/bin/*
-lib/*
-bin/*
-!.empty
+obj
+tests/bin
+lib
+bin
 Notes.md
