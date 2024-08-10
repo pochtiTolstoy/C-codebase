@@ -1,5 +1,7 @@
-obj/*
-tests/bin/*
-lib/*
 bin/*
+obj/*
+lib/*
+tests/bin/*
+!.placeholder
 Notes.md
+
