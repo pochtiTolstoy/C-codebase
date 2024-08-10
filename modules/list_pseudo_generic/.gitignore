@@ -2,5 +2,5 @@ obj/*
 tests/bin/*
 lib/*
 bin/*
-!*.empty
+!.empty
 Notes.md

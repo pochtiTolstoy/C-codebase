@@ -61,7 +61,6 @@ static void check_node_alloc(const Node* node)
 	}
 }
 
-
 static List* set_key_type_(List* list, const char* format) 
 {
 	if (NULL == format || NULL == list) 
@@ -402,7 +401,7 @@ Node* find_key(const List* list, ...) {
   return NULL;
 }
 
-void init_pair(Pair* pair, const char* format, ...) 
+void init_pair(Pair* pair, const char* format, ...)
 {
   va_list factor; 
   va_start(factor, format);
