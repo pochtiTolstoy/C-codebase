@@ -95,7 +95,6 @@ static bool ht_expand(ht* table)
   return true;
 }
 
-
 void ht_destroy(ht* table) 
 {
   for (size_t i = 0; i < table->capacity; ++i) {
