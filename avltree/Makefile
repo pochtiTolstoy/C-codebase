@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Wno-unused-function
+CFLAGS = -g -Wall -Wextra -Werror -Wno-unused-function
 SRC = src
 OBJ = obj
 SRCS = $(wildcard $(SRC)/*.c) 
