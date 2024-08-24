@@ -36,7 +36,8 @@ static void merge_(
       : memcpy(md->buf + k++ * md->size, md->base + j++ * md->size, md->size)
       ;
 
-  while (i <= m) /* buf[k++] = arr[i++]; */ memcpy(md->buf + k++ * md->size, md->base + i++ * md->size, md->size);
+  while (i <= m) /* buf[k++] = arr[i++]; */ 
+    memcpy(md->buf + k++ * md->size, md->base + i++ * md->size, md->size);
 
   while (j <= r) /* buf[k++] = arr[j++]; */
     memcpy(md->buf + k++ * md->size, md->base + j++ * md->size, md->size);
